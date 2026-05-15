@@ -1,0 +1,1036 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ניהול הרשמות - קייטנת שירי</title>
+<style>
+  :root {
+    --pink: #e91e63;
+    --pink-light: #fdf2f8;
+    --pink-dark: #c2185b;
+    --yellow: #fbbf24;
+    --green: #16a34a;
+    --green-light: #dcfce7;
+    --blue: #2563eb;
+    --blue-light: #dbeafe;
+    --purple: #9333ea;
+    --red: #dc2626;
+    --red-light: #fee2e2;
+    --orange: #ea580c;
+    --orange-light: #fed7aa;
+    --gray: #6b7280;
+    --bg: #f6f7fb;
+    --card: #ffffff;
+    --text: #1f2937;
+    --muted: #6b7280;
+    --border: #e5e7eb;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    background: var(--bg);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Heebo", Arial, sans-serif;
+    color: var(--text);
+    min-height: 100vh;
+  }
+  .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+
+  /* ===== Login Screen ===== */
+  .login-screen {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, var(--pink), var(--purple));
+    padding: 20px;
+  }
+  .login-card {
+    background: white;
+    border-radius: 24px;
+    padding: 40px 32px;
+    max-width: 420px;
+    width: 100%;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    text-align: center;
+  }
+  .login-card .lock-icon { font-size: 56px; margin-bottom: 16px; }
+  .login-card h1 { margin: 0 0 8px; color: var(--pink); font-size: 28px; }
+  .login-card .subtitle { color: var(--muted); margin-bottom: 32px; }
+  .login-card input {
+    width: 100%; padding: 14px 18px;
+    border: 2px solid var(--border); border-radius: 12px;
+    font-size: 16px; font-family: inherit;
+    text-align: center; direction: ltr;
+    margin-bottom: 16px;
+  }
+  .login-card input:focus {
+    outline: none; border-color: var(--pink);
+    box-shadow: 0 0 0 4px rgba(233,30,99,0.1);
+  }
+  .login-card button {
+    width: 100%;
+    background: linear-gradient(135deg, var(--pink), var(--purple));
+    color: white; border: none;
+    padding: 14px; border-radius: 12px;
+    font-size: 17px; font-weight: bold;
+    cursor: pointer; font-family: inherit;
+  }
+  .login-error {
+    background: #fef2f2; color: #991b1b;
+    padding: 12px; border-radius: 8px;
+    margin-bottom: 16px; display: none;
+  }
+  .login-error.show { display: block; }
+
+  /* ===== Header ===== */
+  .header {
+    background: linear-gradient(135deg, var(--pink), var(--purple));
+    color: white;
+    padding: 24px 32px;
+    border-radius: 16px;
+    margin-bottom: 24px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .header h1 { margin: 0; font-size: 26px; }
+  .header .subtitle { opacity: 0.9; font-size: 14px; margin-top: 4px; }
+  .header-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn {
+    background: white; color: var(--pink);
+    border: none; padding: 10px 18px;
+    border-radius: 999px;
+    font-weight: bold; cursor: pointer;
+    font-size: 14px; font-family: inherit;
+    transition: transform 0.1s;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .btn:hover { transform: translateY(-1px); }
+  .btn-ghost {
+    background: transparent; color: white;
+    border: 2px solid rgba(255,255,255,0.4);
+  }
+
+  /* ===== Stats Cards ===== */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  .stat {
+    background: white; border-radius: 14px;
+    padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+    border-right: 4px solid var(--pink);
+    position: relative; overflow: hidden;
+    transition: transform 0.15s;
+  }
+  .stat:hover { transform: translateY(-2px); }
+  .stat:nth-child(1) { border-right-color: var(--pink); }
+  .stat:nth-child(2) { border-right-color: var(--orange); }
+  .stat:nth-child(3) { border-right-color: var(--green); }
+  .stat:nth-child(4) { border-right-color: var(--blue); }
+  .stat:nth-child(5) { border-right-color: var(--red); }
+  .stat:nth-child(6) { border-right-color: var(--purple); }
+  .stat-value { font-size: 32px; font-weight: bold; color: var(--text); line-height: 1; }
+  .stat-label { font-size: 13px; color: var(--muted); margin-top: 6px; font-weight: 500; }
+  .stat-icon {
+    position: absolute; top: 16px; left: 16px;
+    font-size: 28px; opacity: 0.3;
+  }
+
+  /* ===== Toolbar ===== */
+  .toolbar {
+    background: white;
+    border-radius: 14px;
+    padding: 16px;
+    margin-bottom: 16px;
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    align-items: center;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+  }
+  .search {
+    flex: 1; min-width: 200px;
+    padding: 11px 16px;
+    border: 2px solid var(--border); border-radius: 10px;
+    font-size: 15px; font-family: inherit;
+  }
+  .search:focus {
+    outline: none; border-color: var(--pink);
+    box-shadow: 0 0 0 3px rgba(233,30,99,0.1);
+  }
+  .filter-select {
+    padding: 11px 14px;
+    border: 2px solid var(--border); border-radius: 10px;
+    font-size: 14px; font-family: inherit;
+    background: white; cursor: pointer;
+  }
+  .toolbar-btn {
+    padding: 10px 16px;
+    background: var(--pink); color: white;
+    border: none; border-radius: 10px;
+    font-weight: bold; cursor: pointer;
+    font-family: inherit; font-size: 14px;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .toolbar-btn:hover { background: var(--pink-dark); }
+  .toolbar-btn.secondary { background: var(--blue); }
+  .toolbar-btn.secondary:hover { background: #1e40af; }
+
+  /* ===== Table ===== */
+  .table-wrap {
+    overflow-x: auto;
+    background: white;
+    border-radius: 14px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+  }
+  thead { background: linear-gradient(135deg, var(--pink-light), #f3e8ff); }
+  th {
+    text-align: right;
+    padding: 14px 12px;
+    font-weight: bold;
+    color: var(--text);
+    border-bottom: 2px solid var(--border);
+    white-space: nowrap;
+    cursor: pointer;
+    user-select: none;
+    font-size: 13px;
+  }
+  th:hover { filter: brightness(0.96); }
+  th .sort-icon { opacity: 0.4; margin-right: 4px; font-size: 11px; }
+  th.sorted-asc .sort-icon::after { content: ' ↑'; opacity: 1; color: var(--pink); }
+  th.sorted-desc .sort-icon::after { content: ' ↓'; opacity: 1; color: var(--pink); }
+  td {
+    padding: 12px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+  }
+  tr:hover td { background: #fafafa; }
+  tr:last-child td { border-bottom: none; }
+  .row-num { color: var(--muted); font-size: 12px; width: 36px; text-align: center; }
+  .date-cell { white-space: nowrap; color: var(--muted); font-size: 12px; }
+  .name-cell { font-weight: bold; }
+  .phone-link, .email-link {
+    text-decoration: none; font-weight: 600;
+  }
+  .phone-link {
+    color: var(--green); direction: ltr;
+    display: inline-block; font-size: 14px;
+  }
+  .email-link {
+    color: var(--blue); direction: ltr;
+    display: inline-block; font-size: 13px;
+  }
+  .phone-link:hover, .email-link:hover { text-decoration: underline; }
+  .status-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: bold;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: all 0.15s;
+  }
+  .status-חדש {
+    background: var(--orange-light); color: var(--orange);
+    border-color: var(--orange);
+  }
+  .status-אושר {
+    background: var(--blue-light); color: var(--blue);
+    border-color: var(--blue);
+  }
+  .status-שולם {
+    background: var(--green-light); color: var(--green);
+    border-color: var(--green);
+  }
+  .status-ביטל {
+    background: var(--red-light); color: var(--red);
+    border-color: var(--red);
+  }
+  .action-btn {
+    background: none; border: none;
+    cursor: pointer; font-size: 18px;
+    padding: 6px; border-radius: 8px;
+    transition: background 0.15s;
+  }
+  .action-btn:hover { background: #f3f4f6; }
+  .action-btn.delete:hover { background: var(--red-light); }
+  .actions-cell {
+    display: flex; gap: 4px;
+    justify-content: center;
+  }
+  .empty {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--muted);
+  }
+  .empty-icon { font-size: 52px; margin-bottom: 12px; }
+  .empty h3 { margin: 0 0 8px; color: var(--text); }
+  .loading {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--muted);
+  }
+  .loading-spinner {
+    font-size: 32px;
+    animation: spin 1s linear infinite;
+    display: inline-block;
+  }
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+  .info-banner {
+    background: #eff6ff;
+    color: #1e40af;
+    padding: 16px;
+    border-radius: 10px;
+    margin: 16px 0;
+    border-right: 4px solid var(--blue);
+  }
+  .error-banner {
+    background: #fef2f2;
+    color: #991b1b;
+    padding: 16px;
+    border-radius: 10px;
+    margin: 16px 0;
+    border-right: 4px solid var(--red);
+  }
+  .hidden { display: none !important; }
+
+  /* ===== Modal ===== */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    padding: 20px;
+  }
+  .modal-overlay.show { display: flex; }
+  .modal {
+    background: white;
+    border-radius: 16px;
+    max-width: 600px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    padding: 28px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+  }
+  .modal h2 {
+    margin: 0 0 4px;
+    color: var(--pink);
+    font-size: 24px;
+  }
+  .modal .modal-subtitle {
+    color: var(--muted);
+    margin-bottom: 24px;
+    font-size: 14px;
+  }
+  .modal-row { margin-bottom: 14px; }
+  .modal-row label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 6px;
+    font-size: 13px;
+    color: var(--text);
+  }
+  .modal-row input, .modal-row textarea, .modal-row select {
+    width: 100%; padding: 10px 12px;
+    border: 2px solid var(--border); border-radius: 10px;
+    font-size: 15px; font-family: inherit;
+  }
+  .modal-row input:focus, .modal-row textarea:focus, .modal-row select:focus {
+    outline: none; border-color: var(--pink);
+  }
+  .modal-row textarea { resize: vertical; min-height: 60px; }
+  .modal-section {
+    background: #f9fafb;
+    padding: 14px;
+    border-radius: 10px;
+    margin-bottom: 16px;
+  }
+  .modal-section h3 {
+    margin: 0 0 12px;
+    font-size: 15px;
+    color: var(--pink-dark);
+  }
+  .modal-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+    justify-content: flex-end;
+  }
+  .modal-actions button {
+    padding: 11px 22px;
+    border: none;
+    border-radius: 10px;
+    font-weight: bold;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 14px;
+  }
+  .btn-save {
+    background: var(--green); color: white;
+  }
+  .btn-cancel {
+    background: #e5e7eb; color: var(--text);
+  }
+  .btn-delete {
+    background: var(--red); color: white;
+  }
+
+  /* ===== Detail view ===== */
+  .detail-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px 16px;
+    font-size: 14px;
+  }
+  .detail-grid .label { color: var(--muted); }
+  .detail-grid .value { font-weight: 500; }
+  @media (max-width: 600px) {
+    .detail-grid { grid-template-columns: 1fr; }
+    .container { padding: 12px; }
+    .header { padding: 18px 20px; }
+    .header h1 { font-size: 20px; }
+    th, td { padding: 8px; font-size: 12px; }
+    .stat-value { font-size: 24px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Login Screen -->
+<div id="login-screen" class="login-screen">
+  <div class="login-card">
+    <div class="lock-icon">🔐</div>
+    <h1>ניהול קייטנת שירי</h1>
+    <p class="subtitle">דשבורד פרטי לניהול הרשמות</p>
+    <div class="login-error" id="login-error">סיסמה שגויה. נסי שוב.</div>
+    <form onsubmit="login(event)">
+      <input type="password" id="password-input" placeholder="הקלידי סיסמה" autofocus required>
+      <button type="submit">כניסה ←</button>
+    </form>
+  </div>
+</div>
+
+<!-- Dashboard -->
+<div id="dashboard" class="container hidden">
+
+  <div class="header">
+    <div>
+      <h1>📋 ניהול הרשמות - קייטנת שירי</h1>
+      <div class="subtitle">קיץ 2026 • 11-25.08.2026</div>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-ghost" onclick="loadData()">🔄 רענן</button>
+      <button class="btn btn-ghost" onclick="exportCSV()">📥 הורד אקסל</button>
+      <button class="btn btn-ghost" onclick="logout()">🚪 יציאה</button>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats" id="stats">
+    <div class="stat">
+      <div class="stat-icon">👥</div>
+      <div class="stat-value" id="stat-total">0</div>
+      <div class="stat-label">סה"כ הרשמות</div>
+    </div>
+    <div class="stat">
+      <div class="stat-icon">⏳</div>
+      <div class="stat-value" id="stat-new">0</div>
+      <div class="stat-label">חדשות (לטיפול)</div>
+    </div>
+    <div class="stat">
+      <div class="stat-icon">✅</div>
+      <div class="stat-value" id="stat-approved">0</div>
+      <div class="stat-label">אושרו</div>
+    </div>
+    <div class="stat">
+      <div class="stat-icon">💰</div>
+      <div class="stat-value" id="stat-paid">0</div>
+      <div class="stat-label">שילמו</div>
+    </div>
+    <div class="stat">
+      <div class="stat-icon">❌</div>
+      <div class="stat-value" id="stat-cancelled">0</div>
+      <div class="stat-label">ביטלו</div>
+    </div>
+    <div class="stat">
+      <div class="stat-icon">🧒</div>
+      <div class="stat-value" id="stat-kids">0</div>
+      <div class="stat-label">סה"כ ילדים</div>
+    </div>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="toolbar">
+    <input type="text" class="search" id="search" placeholder="🔍 חיפוש לפי שם, טלפון, אימייל..." oninput="renderTable()">
+    <select class="filter-select" id="status-filter" onchange="renderTable()">
+      <option value="">כל הסטטוסים</option>
+      <option value="חדש">חדש</option>
+      <option value="אושר">אושר</option>
+      <option value="שולם">שולם</option>
+      <option value="ביטל">ביטל</option>
+    </select>
+  </div>
+
+  <!-- Banners -->
+  <div id="error-banner" class="error-banner hidden"></div>
+  <div id="info-banner" class="info-banner hidden"></div>
+
+  <!-- Loading -->
+  <div id="loading" class="loading">
+    <div class="loading-spinner">⏳</div>
+    <p>טוען נתונים...</p>
+  </div>
+
+  <!-- Table -->
+  <div id="content" class="hidden">
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th class="row-num">#</th>
+            <th onclick="sortBy('created_at')">תאריך הרשמה <span class="sort-icon">↕</span></th>
+            <th onclick="sortBy('parent_first_name')">שם הורה <span class="sort-icon">↕</span></th>
+            <th onclick="sortBy('parent_phone')">טלפון <span class="sort-icon">↕</span></th>
+            <th onclick="sortBy('parent_email')">אימייל <span class="sort-icon">↕</span></th>
+            <th>ילדים</th>
+            <th onclick="sortBy('start_date')">תאריכים <span class="sort-icon">↕</span></th>
+            <th onclick="sortBy('status')">סטטוס <span class="sort-icon">↕</span></th>
+            <th>פעולות</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+    <div id="empty" class="empty hidden">
+      <div class="empty-icon">📭</div>
+      <h3>עדיין אין הרשמות</h3>
+      <p>כשהורים יירשמו דרך האתר, ההרשמות יופיעו כאן אוטומטית.</p>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Modal -->
+<div class="modal-overlay" id="edit-modal" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <h2 id="modal-title">עריכת נרשם/ת</h2>
+    <p class="modal-subtitle" id="modal-subtitle"></p>
+
+    <div class="modal-section">
+      <h3>👨‍👩‍👧 פרטי ההורה</h3>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div class="modal-row">
+          <label>שם פרטי</label>
+          <input type="text" id="edit-parent-first">
+        </div>
+        <div class="modal-row">
+          <label>שם משפחה</label>
+          <input type="text" id="edit-parent-last">
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div class="modal-row">
+          <label>טלפון</label>
+          <input type="tel" id="edit-phone">
+        </div>
+        <div class="modal-row">
+          <label>אימייל</label>
+          <input type="email" id="edit-email">
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-section">
+      <h3>🧒 ילדים</h3>
+      <div class="modal-row">
+        <label>סיכום ילדים</label>
+        <textarea id="edit-children" rows="2"></textarea>
+        <small style="color:var(--muted);font-size:12px">לדוגמה: שקד (גיל 6, גן חובה) | יואב (גיל 8, כיתה ב)</small>
+      </div>
+    </div>
+
+    <div class="modal-section">
+      <h3>📅 תאריכים</h3>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div class="modal-row">
+          <label>תאריך התחלה</label>
+          <input type="date" id="edit-start">
+        </div>
+        <div class="modal-row">
+          <label>תאריך סיום</label>
+          <input type="date" id="edit-end">
+        </div>
+      </div>
+      <div class="modal-row">
+        <label>ימי היעדרות</label>
+        <input type="text" id="edit-missing">
+      </div>
+    </div>
+
+    <div class="modal-section">
+      <h3>🏥 מידע רפואי</h3>
+      <div class="modal-row">
+        <label>אלרגיות</label>
+        <textarea id="edit-allergies" rows="2"></textarea>
+      </div>
+      <div class="modal-row">
+        <label>הערות מההורה</label>
+        <textarea id="edit-notes" rows="2"></textarea>
+      </div>
+    </div>
+
+    <div class="modal-section" style="background:#fefce8">
+      <h3 style="color:#a16207">📝 הערות פנימיות (לשירי בלבד)</h3>
+      <div class="modal-row">
+        <textarea id="edit-admin-notes" rows="3" placeholder="לדוגמה: התקשרה והבטיחה לשלם ביום שלישי..."></textarea>
+      </div>
+    </div>
+
+    <div class="modal-row">
+      <label>סטטוס</label>
+      <select id="edit-status">
+        <option value="חדש">חדש</option>
+        <option value="אושר">אושר</option>
+        <option value="שולם">שולם</option>
+        <option value="ביטל">ביטל</option>
+      </select>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-delete" onclick="deleteRegistration()">🗑️ מחק נרשם</button>
+      <button class="btn-cancel" onclick="closeModal()">ביטול</button>
+      <button class="btn-save" onclick="saveEdit()">💾 שמור שינויים</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== Configuration =====
+const JSONBIN_BIN_ID = '6a079ba2adc21f119aa7bce4';
+const JSONBIN_MASTER_KEY = '$2a$10$Cvlv0hEGbc5L20vdFXDSxuuUNUpZIjxFtp.o4BmPDzb06mzQX0P8S';
+const DASHBOARD_PASSWORD = 'shiri2026';
+const JSONBIN_URL = 'https://api.jsonbin.io/v3/b/' + JSONBIN_BIN_ID;
+const SESSION_KEY = 'shiri_dashboard_authenticated';
+
+let allRegistrations = [];
+let sortKey = 'created_at';
+let sortDir = 'desc';
+let currentEditId = null;
+
+// ===== Login =====
+function login(e) {
+  e.preventDefault();
+  const password = document.getElementById('password-input').value;
+  const errorEl = document.getElementById('login-error');
+
+  if (password === DASHBOARD_PASSWORD) {
+    sessionStorage.setItem(SESSION_KEY, 'true');
+    document.getElementById('login-screen').classList.add('hidden');
+    document.getElementById('dashboard').classList.remove('hidden');
+    loadData();
+  } else {
+    errorEl.classList.add('show');
+    document.getElementById('password-input').value = '';
+    setTimeout(() => errorEl.classList.remove('show'), 3000);
+  }
+  return false;
+}
+
+function logout() {
+  if (!confirm('האם להתנתק מהדשבורד?')) return;
+  sessionStorage.removeItem(SESSION_KEY);
+  location.reload();
+}
+
+function checkAuth() {
+  if (sessionStorage.getItem(SESSION_KEY) === 'true') {
+    document.getElementById('login-screen').classList.add('hidden');
+    document.getElementById('dashboard').classList.remove('hidden');
+    loadData();
+  }
+}
+
+// ===== Data Loading =====
+async function loadData() {
+  hideMessages();
+  document.getElementById('loading').classList.remove('hidden');
+  document.getElementById('content').classList.add('hidden');
+
+  try {
+    const res = await fetch(JSONBIN_URL + '/latest', {
+      headers: { 'X-Master-Key': JSONBIN_MASTER_KEY }
+    });
+    if (!res.ok) throw new Error('Failed to load: ' + res.status);
+    const data = await res.json();
+    const record = data.record || {};
+    allRegistrations = record.registrations || [];
+
+    renderTable();
+    updateStats();
+
+    document.getElementById('loading').classList.add('hidden');
+    document.getElementById('content').classList.remove('hidden');
+
+    if (allRegistrations.length === 0) {
+      showInfo('💡 עדיין לא נכנסו הרשמות. כשמישהו יירשם דרך האתר - ההרשמה תופיע כאן אוטומטית. לחצי על "🔄 רענן" כדי לראות עדכונים.');
+    }
+  } catch (err) {
+    document.getElementById('loading').classList.add('hidden');
+    showError('שגיאה בטעינה: ' + err.message);
+  }
+}
+
+async function saveData() {
+  try {
+    const res = await fetch(JSONBIN_URL, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Master-Key': JSONBIN_MASTER_KEY
+      },
+      body: JSON.stringify({ registrations: allRegistrations })
+    });
+    if (!res.ok) throw new Error('Failed to save: ' + res.status);
+    return true;
+  } catch (err) {
+    showError('שגיאה בשמירה: ' + err.message);
+    return false;
+  }
+}
+
+// ===== Rendering =====
+function renderTable() {
+  const search = document.getElementById('search').value.trim().toLowerCase();
+  const statusFilter = document.getElementById('status-filter').value;
+
+  let filtered = [...allRegistrations];
+
+  if (statusFilter) {
+    filtered = filtered.filter(r => (r.status || 'חדש') === statusFilter);
+  }
+
+  if (search) {
+    filtered = filtered.filter(r =>
+      Object.values(r).some(v => {
+        if (typeof v === 'string') return v.toLowerCase().includes(search);
+        if (Array.isArray(v)) return JSON.stringify(v).toLowerCase().includes(search);
+        return false;
+      })
+    );
+  }
+
+  filtered.sort((a, b) => {
+    let av = a[sortKey], bv = b[sortKey];
+    if (sortKey === 'created_at' || sortKey === 'start_date') {
+      av = new Date(av || 0).getTime();
+      bv = new Date(bv || 0).getTime();
+    } else {
+      av = String(av || '').toLowerCase();
+      bv = String(bv || '').toLowerCase();
+    }
+    if (av < bv) return sortDir === 'asc' ? -1 : 1;
+    if (av > bv) return sortDir === 'asc' ? 1 : -1;
+    return 0;
+  });
+
+  const tbody = document.getElementById('tbody');
+  const empty = document.getElementById('empty');
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = '';
+    empty.classList.remove('hidden');
+    if (allRegistrations.length === 0) {
+      empty.innerHTML = '<div class="empty-icon">📭</div><h3>עדיין אין הרשמות</h3><p>כשהורים יירשמו דרך האתר, ההרשמות יופיעו כאן אוטומטית.</p>';
+    } else {
+      empty.innerHTML = '<div class="empty-icon">🔍</div><h3>לא נמצאו תוצאות</h3><p>נסי לחפש משהו אחר או לשנות את הסינון</p>';
+    }
+    return;
+  }
+
+  empty.classList.add('hidden');
+  tbody.innerHTML = filtered.map((r, idx) => {
+    const created = r.created_at ? new Date(r.created_at).toLocaleString('he-IL', {
+      day: '2-digit', month: '2-digit', year: '2-digit',
+      hour: '2-digit', minute: '2-digit'
+    }) : '-';
+    const fullName = (r.parent_first_name || '') + ' ' + (r.parent_last_name || '');
+    const phoneClean = String(r.parent_phone || '').replace(/[^\d+]/g, '');
+    const phoneLink = r.parent_phone ? `<a href="tel:${phoneClean}" class="phone-link">${escape(r.parent_phone)}</a>` : '-';
+    const emailLink = r.parent_email ? `<a href="mailto:${escapeAttr(r.parent_email)}" class="email-link">${escape(r.parent_email)}</a>` : '-';
+    const children = r.children_summary || '-';
+    const dates = (r.start_date || r.end_date)
+      ? formatDate(r.start_date) + ' - ' + formatDate(r.end_date)
+      : '-';
+    const status = r.status || 'חדש';
+
+    return `<tr>
+      <td class="row-num">${idx + 1}</td>
+      <td class="date-cell">${created}</td>
+      <td class="name-cell">${escape(fullName.trim() || '-')}</td>
+      <td>${phoneLink}</td>
+      <td>${emailLink}</td>
+      <td style="font-size:13px;max-width:200px">${escape(children)}</td>
+      <td class="date-cell">${dates}</td>
+      <td>
+        <span class="status-badge status-${status}" onclick="quickStatus('${r.id}')" title="לחצי לשינוי סטטוס">
+          ${status}
+        </span>
+      </td>
+      <td class="actions-cell">
+        <button class="action-btn" onclick="openEdit('${r.id}')" title="ערוך">✏️</button>
+        <button class="action-btn delete" onclick="confirmDelete('${r.id}')" title="מחק">🗑️</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function formatDate(d) {
+  if (!d) return '?';
+  const date = new Date(d);
+  if (isNaN(date)) return d;
+  return date.toLocaleDateString('he-IL', { day: '2-digit', month: '2-digit' });
+}
+
+function sortBy(key) {
+  if (sortKey === key) sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+  else { sortKey = key; sortDir = 'desc'; }
+  renderTable();
+}
+
+function updateStats() {
+  const total = allRegistrations.length;
+  let newCount = 0, approved = 0, paid = 0, cancelled = 0, kids = 0;
+
+  for (const r of allRegistrations) {
+    const s = r.status || 'חדש';
+    if (s === 'חדש') newCount++;
+    else if (s === 'אושר') approved++;
+    else if (s === 'שולם') paid++;
+    else if (s === 'ביטל') cancelled++;
+
+    if (Array.isArray(r.children)) kids += r.children.length;
+  }
+
+  document.getElementById('stat-total').textContent = total;
+  document.getElementById('stat-new').textContent = newCount;
+  document.getElementById('stat-approved').textContent = approved;
+  document.getElementById('stat-paid').textContent = paid;
+  document.getElementById('stat-cancelled').textContent = cancelled;
+  document.getElementById('stat-kids').textContent = kids;
+}
+
+// ===== Status Quick-Change =====
+async function quickStatus(id) {
+  const r = allRegistrations.find(x => x.id === id);
+  if (!r) return;
+  const statuses = ['חדש', 'אושר', 'שולם', 'ביטל'];
+  const current = r.status || 'חדש';
+  const nextIdx = (statuses.indexOf(current) + 1) % statuses.length;
+  r.status = statuses[nextIdx];
+
+  renderTable();
+  updateStats();
+  await saveData();
+}
+
+// ===== Modal / Edit =====
+function openEdit(id) {
+  const r = allRegistrations.find(x => x.id === id);
+  if (!r) return;
+  currentEditId = id;
+
+  const fullName = ((r.parent_first_name || '') + ' ' + (r.parent_last_name || '')).trim();
+  document.getElementById('modal-title').textContent = 'עריכת: ' + (fullName || 'נרשם/ת');
+  document.getElementById('modal-subtitle').textContent = 'נרשם/ה ב-' + (r.created_at ? new Date(r.created_at).toLocaleString('he-IL') : '');
+
+  document.getElementById('edit-parent-first').value = r.parent_first_name || '';
+  document.getElementById('edit-parent-last').value = r.parent_last_name || '';
+  document.getElementById('edit-phone').value = r.parent_phone || '';
+  document.getElementById('edit-email').value = r.parent_email || '';
+  document.getElementById('edit-children').value = r.children_summary || '';
+  document.getElementById('edit-start').value = r.start_date || '';
+  document.getElementById('edit-end').value = r.end_date || '';
+  document.getElementById('edit-missing').value = r.missing_days || '';
+  document.getElementById('edit-allergies').value = r.allergies || '';
+  document.getElementById('edit-notes').value = r.notes || '';
+  document.getElementById('edit-admin-notes').value = r.admin_notes || '';
+  document.getElementById('edit-status').value = r.status || 'חדש';
+
+  document.getElementById('edit-modal').classList.add('show');
+}
+
+function closeModal() {
+  document.getElementById('edit-modal').classList.remove('show');
+  currentEditId = null;
+}
+
+async function saveEdit() {
+  if (!currentEditId) return;
+  const r = allRegistrations.find(x => x.id === currentEditId);
+  if (!r) return;
+
+  r.parent_first_name = document.getElementById('edit-parent-first').value;
+  r.parent_last_name = document.getElementById('edit-parent-last').value;
+  r.parent_phone = document.getElementById('edit-phone').value;
+  r.parent_email = document.getElementById('edit-email').value;
+  r.children_summary = document.getElementById('edit-children').value;
+  r.start_date = document.getElementById('edit-start').value;
+  r.end_date = document.getElementById('edit-end').value;
+  r.missing_days = document.getElementById('edit-missing').value;
+  r.allergies = document.getElementById('edit-allergies').value;
+  r.notes = document.getElementById('edit-notes').value;
+  r.admin_notes = document.getElementById('edit-admin-notes').value;
+  r.status = document.getElementById('edit-status').value;
+
+  const ok = await saveData();
+  if (ok) {
+    closeModal();
+    renderTable();
+    updateStats();
+    showInfo('✅ השינויים נשמרו בהצלחה');
+    setTimeout(hideMessages, 3000);
+  }
+}
+
+async function deleteRegistration() {
+  if (!currentEditId) return;
+  const r = allRegistrations.find(x => x.id === currentEditId);
+  if (!r) return;
+
+  const name = ((r.parent_first_name || '') + ' ' + (r.parent_last_name || '')).trim();
+  if (!confirm('האם למחוק לצמיתות את ההרשמה של "' + (name || 'נרשם זה') + '"?\n\nפעולה זו לא ניתנת לביטול.')) return;
+
+  allRegistrations = allRegistrations.filter(x => x.id !== currentEditId);
+  const ok = await saveData();
+  if (ok) {
+    closeModal();
+    renderTable();
+    updateStats();
+    showInfo('🗑️ ההרשמה נמחקה בהצלחה');
+    setTimeout(hideMessages, 3000);
+  }
+}
+
+async function confirmDelete(id) {
+  const r = allRegistrations.find(x => x.id === id);
+  if (!r) return;
+  const name = ((r.parent_first_name || '') + ' ' + (r.parent_last_name || '')).trim();
+  if (!confirm('האם למחוק לצמיתות את ההרשמה של "' + (name || 'נרשם זה') + '"?\n\nפעולה זו לא ניתנת לביטול.')) return;
+
+  allRegistrations = allRegistrations.filter(x => x.id !== id);
+  const ok = await saveData();
+  if (ok) {
+    renderTable();
+    updateStats();
+    showInfo('🗑️ ההרשמה נמחקה בהצלחה');
+    setTimeout(hideMessages, 3000);
+  }
+}
+
+// ===== CSV Export =====
+function exportCSV() {
+  if (allRegistrations.length === 0) {
+    alert('אין נתונים לייצוא');
+    return;
+  }
+  const headers = [
+    'תאריך הרשמה', 'סטטוס',
+    'שם פרטי הורה', 'שם משפחה הורה', 'טלפון', 'אימייל',
+    'סיכום ילדים',
+    'שם ילד 1', 'גיל ילד 1', 'גן ילד 1',
+    'שם ילד 2', 'גיל ילד 2', 'גן ילד 2',
+    'שם ילד 3', 'גיל ילד 3', 'גן ילד 3',
+    'שם ילד 4', 'גיל ילד 4', 'גן ילד 4',
+    'שם ילד 5', 'גיל ילד 5', 'גן ילד 5',
+    'תאריך התחלה', 'תאריך סיום', 'ימי היעדרות',
+    'אלרגיות', 'הערות מההורה', 'הערות פנימיות',
+    'שמעו עלינו מ', 'אישור תנאים'
+  ];
+
+  const rows = allRegistrations.map(r => {
+    const kids = r.children || [];
+    const row = [
+      r.created_at ? new Date(r.created_at).toLocaleString('he-IL') : '',
+      r.status || 'חדש',
+      r.parent_first_name || '', r.parent_last_name || '',
+      r.parent_phone || '', r.parent_email || '',
+      r.children_summary || ''
+    ];
+    for (let i = 0; i < 5; i++) {
+      row.push(kids[i] ? (kids[i].name || '') : '');
+      row.push(kids[i] ? (kids[i].age || '') : '');
+      row.push(kids[i] ? (kids[i].gan || '') : '');
+    }
+    row.push(r.start_date || '', r.end_date || '', r.missing_days || '');
+    row.push(r.allergies || '', r.notes || '', r.admin_notes || '');
+    row.push(r.heard_from || '', r.terms_agreed || '');
+    return row;
+  });
+
+  let csv = '\uFEFF' + headers.map(csvCell).join(',') + '\n';
+  csv += rows.map(r => r.map(csvCell).join(',')).join('\n');
+
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'הרשמות_קייטנת_שירי_' + new Date().toISOString().slice(0,10) + '.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function csvCell(v) {
+  const s = String(v == null ? '' : v);
+  return s.includes(',') || s.includes('"') || s.includes('\n')
+    ? '"' + s.replace(/"/g, '""') + '"' : s;
+}
+
+// ===== Helpers =====
+function escape(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, m => ({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+  }[m]));
+}
+function escapeAttr(s) { return escape(s); }
+
+function showError(msg) {
+  const el = document.getElementById('error-banner');
+  el.textContent = msg;
+  el.classList.remove('hidden');
+}
+function showInfo(msg) {
+  const el = document.getElementById('info-banner');
+  el.innerHTML = msg;
+  el.classList.remove('hidden');
+}
+function hideMessages() {
+  document.getElementById('error-banner').classList.add('hidden');
+  document.getElementById('info-banner').classList.add('hidden');
+}
+
+// ===== Init =====
+checkAuth();
+</script>
+</body>
+</html>
