@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>קייטנת שירי – הרשמה קיץ 2026</title>
-<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <style>
   :root {
     --pink: #e91e63;
@@ -379,18 +378,31 @@ async function submitForm(e) {
     });
     if (!putRes.ok) throw new Error('Failed to save: ' + putRes.status);
 
-    // Step 2: Send beautiful confirmation email to the parent via EmailJS
+    // Step 2: Send beautiful confirmation email to the parent via EmailJS REST API
+    // (using direct API call instead of the SDK, which is blocked by GitHub Pages CSP)
     try {
       const parentFullName = (registration.parent_first_name + ' ' + registration.parent_last_name).trim();
-      emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
-        email: registration.parent_email,
-        parent_name: parentFullName,
-        parent_phone: registration.parent_phone,
-        children_summary: registration.children_summary,
-        start_date: registration.start_date,
-        end_date: registration.end_date
-      }, { publicKey: EMAILJS_PUBLIC_KEY }).catch(function(err) {
-        console.error('EmailJS error:', err);
+      fetch('https://api.emailjs.com/api/v1.0/email/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          service_id: EMAILJS_SERVICE_ID,
+          template_id: EMAILJS_TEMPLATE_ID,
+          user_id: EMAILJS_PUBLIC_KEY,
+          template_params: {
+            email: registration.parent_email,
+            parent_name: parentFullName,
+            parent_phone: registration.parent_phone,
+            children_summary: registration.children_summary,
+            start_date: registration.start_date,
+            end_date: registration.end_date
+          }
+        })
+      }).then(function(r) {
+        if (!r.ok) { r.text().then(function(t) { console.error('EmailJS API error:', r.status, t); }); }
+        else { console.log('Confirmation email sent successfully'); }
+      }).catch(function(err) {
+        console.error('EmailJS network error:', err);
       });
     } catch (_) { /* email is optional - don't block the registration */ }
 
