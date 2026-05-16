@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>קייטנת שירי – הרשמה קיץ 2026</title>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <style>
   :root {
     --pink: #e91e63;
@@ -266,8 +267,11 @@
 // ===== Configuration =====
 const JSONBIN_BIN_ID = '6a079ba2adc21f119aa7bce4';
 const JSONBIN_MASTER_KEY = '$2a$10$Cvlv0hEGbc5L20vdFXDSxuuUNUpZIjxFtp.o4BmPDzb06mzQX0P8S';
-const WEB3FORMS_KEY = '2a909da4-a1d0-4fa7-849b-85212e55669b';
 const JSONBIN_URL = 'https://api.jsonbin.io/v3/b/' + JSONBIN_BIN_ID;
+// EmailJS - sends a beautiful confirmation email to each parent who registers
+const EMAILJS_SERVICE_ID = 'service_1lmf359';
+const EMAILJS_TEMPLATE_ID = 'template_lbuelop';
+const EMAILJS_PUBLIC_KEY = 'O0Bl02D_VK_2fyMclnjk4';
 
 let childCount = 0;
 const MAX_CHILDREN = 5;
@@ -375,23 +379,20 @@ async function submitForm(e) {
     });
     if (!putRes.ok) throw new Error('Failed to save: ' + putRes.status);
 
-    // Step 2: Also send email notification via Web3Forms (best-effort, don't block on it)
+    // Step 2: Send beautiful confirmation email to the parent via EmailJS
     try {
-      const emailData = new FormData();
-      emailData.append('access_key', WEB3FORMS_KEY);
-      emailData.append('subject', '🎉 הרשמה חדשה לקייטנת שירי');
-      emailData.append('from_name', 'קייטנת שירי');
-      emailData.append('שם_פרטי_הורה', registration.parent_first_name);
-      emailData.append('שם_משפחה_הורה', registration.parent_last_name);
-      emailData.append('טלפון', registration.parent_phone);
-      emailData.append('אימייל', registration.parent_email);
-      emailData.append('ילדים', registration.children_summary);
-      emailData.append('תאריך_התחלה', registration.start_date);
-      emailData.append('תאריך_סיום', registration.end_date);
-      emailData.append('אלרגיות', registration.allergies);
-      emailData.append('הערות', registration.notes);
-      fetch('https://api.web3forms.com/submit', { method: 'POST', body: emailData }).catch(() => {});
-    } catch (_) { /* email is optional */ }
+      const parentFullName = (registration.parent_first_name + ' ' + registration.parent_last_name).trim();
+      emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+        email: registration.parent_email,
+        parent_name: parentFullName,
+        parent_phone: registration.parent_phone,
+        children_summary: registration.children_summary,
+        start_date: registration.start_date,
+        end_date: registration.end_date
+      }, { publicKey: EMAILJS_PUBLIC_KEY }).catch(function(err) {
+        console.error('EmailJS error:', err);
+      });
+    } catch (_) { /* email is optional - don't block the registration */ }
 
     document.getElementById('form-content').style.display = 'none';
     document.getElementById('success-msg').classList.add('show');
