@@ -168,6 +168,66 @@
   .success-msg .check { font-size: 72px; margin-bottom: 12px; }
   .success-msg h3 { color: var(--green); margin: 0 0 8px; font-size: 26px; }
   .success-msg p { color: var(--muted); margin: 0; font-size: 16px; }
+
+  /* Registration closed message */
+  .closed-msg { display: none; text-align: center; padding: 50px 28px; }
+  .closed-msg.show { display: block; }
+  .closed-icon {
+    font-size: 64px;
+    margin-bottom: 16px;
+    animation: gentleFloat 3s ease-in-out infinite;
+  }
+  @keyframes gentleFloat {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+  .closed-msg h3 {
+    color: var(--pink);
+    margin: 0 0 16px;
+    font-size: 30px;
+    font-weight: 900;
+  }
+  .closed-main {
+    color: var(--text);
+    font-size: 19px;
+    font-weight: 700;
+    margin: 0 0 16px;
+  }
+  .closed-sub {
+    color: var(--muted);
+    font-size: 16px;
+    line-height: 1.7;
+    margin: 0 0 8px;
+  }
+  .closed-divider {
+    width: 80px;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, var(--pink), transparent);
+    margin: 28px auto;
+    border-radius: 999px;
+  }
+  .closed-contact {
+    color: var(--text);
+    font-size: 16px;
+    line-height: 1.8;
+    margin: 0 0 24px;
+  }
+  .closed-phone {
+    display: inline-block;
+    margin-top: 8px;
+    color: var(--green);
+    font-size: 24px;
+    font-weight: 900;
+    text-decoration: none;
+    direction: ltr;
+  }
+  .closed-phone:hover { text-decoration: underline; }
+  .closed-footer {
+    color: var(--pink-dark);
+    font-size: 17px;
+    font-weight: 700;
+    margin: 0;
+  }
   .error-msg {
     background: #fef2f2; color: #991b1b;
     padding: 14px; border-radius: 10px;
@@ -257,12 +317,38 @@
       <p style="margin-top:16px;font-size:14px">ניתן לסגור את הדף או לרשום ילד/ה נוסף/ת</p>
       <button type="button" class="submit-btn" style="max-width:200px;margin-top:20px" onclick="resetForm()">להרשמה חדשה</button>
     </div>
+
+    <div id="closed-msg" class="closed-msg">
+      <div class="closed-icon">🌸</div>
+      <h3>ההרשמה הסתיימה</h3>
+      <p class="closed-main">תודה רבה על ההתעניינות הגדולה! 💕</p>
+      <p class="closed-sub">
+        כל המקומות בקייטנת שירי לקיץ 2026 התמלאו.<br>
+        אנחנו מתרגשים ונרגשים מהאהבה והאמון שקיבלנו מכם! 🎉
+      </p>
+      <div class="closed-divider"></div>
+      <p class="closed-contact">
+        לכל שאלה או בירור, אנחנו תמיד כאן:<br>
+        <a href="tel:0509718939" class="closed-phone">📞 050-9718939</a>
+      </p>
+      <p class="closed-footer">נתראה בקיץ הבא! ☀️🌷</p>
+    </div>
   </div>
 
   <footer>קייטנת שירי © 2026 • כי לקיץ הזה מגיע להיות מיוחד!</footer>
 </div>
 
 <script>
+// ============================================================
+//  🎛️  מתג פתיחה / סגירה של ההרשמה
+// ------------------------------------------------------------
+//  true  = ההרשמה פתוחה (הטופס מופיע כרגיל)
+//  false = ההרשמה סגורה (תופיע הודעה "ההרשמה הסתיימה")
+//
+//  כדי לפתוח שוב את ההרשמה בעתיד: שנה false ל-true ושמור (Commit)
+// ============================================================
+const REGISTRATION_OPEN = false;
+
 // ===== Configuration =====
 const JSONBIN_BIN_ID = '6a079ba2adc21f119aa7bce4';
 const JSONBIN_MASTER_KEY = '$2a$10$Cvlv0hEGbc5L20vdFXDSxuuUNUpZIjxFtp.o4BmPDzb06mzQX0P8S';
@@ -276,9 +362,17 @@ let childCount = 0;
 const MAX_CHILDREN = 5;
 
 function showForm() {
-  const form = document.getElementById('registration-form');
-  form.classList.add('show');
-  setTimeout(() => form.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+  const section = document.getElementById('registration-form');
+  section.classList.add('show');
+
+  if (!REGISTRATION_OPEN) {
+    // Registration is closed - show the closed message instead of the form
+    document.getElementById('form-content').style.display = 'none';
+    document.getElementById('success-msg').classList.remove('show');
+    document.getElementById('closed-msg').classList.add('show');
+  }
+
+  setTimeout(() => section.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
 }
 
 function addChild() {
