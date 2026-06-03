@@ -625,11 +625,895 @@
 
 <script>
 // ===== Configuration =====
-const JSONBIN_BIN_ID = '6a079ba2adc21f119aa7bce4';
-const JSONBIN_MASTER_KEY = '$2a$10$Cvlv0hEGbc5L20vdFXDSxuuUNUpZIjxFtp.o4BmPDzb06mzQX0P8S';
+// הנתונים נשמרים בקובץ registrations.json באותו ריפו ב-GitHub
+const DATA_URL = 'registrations.json';
 const DASHBOARD_PASSWORD = 'shiri2026';
-const JSONBIN_URL = 'https://api.jsonbin.io/v3/b/' + JSONBIN_BIN_ID;
 const SESSION_KEY = 'shiri_dashboard_authenticated';
+
+// ===== נרשמים מוטמעים בתוך הדף (ברירת מחדל — עובד גם בלי קבצים חיצוניים) =====
+const EMBEDDED_REGISTRATIONS = [
+  {
+    "id": "seed-001",
+    "created_at": "2026-05-16T18:21:56",
+    "status": "חדש",
+    "parent_first_name": "דקלה",
+    "parent_last_name": "גרינולד",
+    "parent_phone": "0543332743",
+    "parent_email": "dikla.rf@gmail.com",
+    "children_summary": "אוהד גרינולד (גיל 5, גן טרום חובה)",
+    "children": [
+      {
+        "name": "אוהד גרינולד",
+        "age": "5",
+        "gan": "גן טרום חובה"
+      }
+    ],
+    "start_date": "2026-08-11",
+    "end_date": "2026-08-25",
+    "missing_days": "",
+    "allergies": "",
+    "notes": "",
+    "admin_notes": "",
+    "heard_from": "חוזרים",
+    "terms_agreed": "כן"
+  },
+  {
+    "id": "seed-002",
+    "created_at": "2026-05-16T18:23:10",
+    "status": "חדש",
+    "parent_first_name": "אביגל",
+    "parent_last_name": "רובינצ׳יק",
+    "parent_phone": "0543986136",
+    "parent_email": "avigal2506@gmail.com",
+    "children_summary": "דניאל (גיל 5, גן אופירה)",
+    "children": [
+      {
+        "name": "דניאל",
+        "age": "5",
+        "gan": "גן אופירה"
+      }
+    ],
+    "start_date": "2026-08-11",
+    "end_date": "2026-08-23",
+    "missing_days": "24.8 ו25.8",
+    "allergies": "",
+    "notes": "",
+    "admin_notes": "",
+    "heard_from": "חוזרים",
+    "terms_agreed": "כן"
+  },
+  {
+    "id": "seed-003",
+    "created_at": "2026-05-16T18:27:59",
+    "status": "חדש",
+    "parent_first_name": "קרן",
+    "parent_last_name": "שניר",
+    "parent_phone": "0524578246",
+    "parent_email": "kerenzom@gmail.com",
+    "children_summary": "ליה שניר (גיל 4, נחשון)",
+    "children": [
+      {
+        "name": "ליה שניר",
+        "age": "4",
+        "gan": "נחשון"
+      }
+    ],
+    "start_date": "2026-08-11",
+    "end_date": "2026-08-25",
+    "missing_days": "",
+    "allergies": "לא שידוע לנו.. 😁",
+    "notes": "",
+    "admin_notes": "",
+    "heard_from": "חברים",
+    "terms_agreed": "כן"
+  },
+  {
+    "id": "seed-004",
+    "created_at": "2026-05-16T18:25:35",
+    "status": "חדש",
+    "parent_first_name": "נטשה",
+    "parent_last_name": "טל",
+    "parent_phone": "0544429551",
+    "parent_email": "natix91@gmail.com",
+    "children_summary": "ליאם (גיל 5, גם טרום חובה)",
+    "children": [
+      {
+        "name": "ליאם",
+        "age": "5",
+        "gan": "גם טרום חובה"
+      }
+    ],
+    "start_date": "2026-08-11",
+    "end_date": "2026-08-25",
+    "missing_days": "",
+    "allergies": "",
+    "notes": "",
+    "admin_notes": "",
+    "heard_from": "חוזרים",
+    "terms_agreed": "כן"
+  },
+  {
+    "id": "seed-005",
+    "created_at": "2026-05-16T18:27:53",
+    "status": "חדש",
+    "parent_first_name": "אורטל",
+    "parent_last_name": "חייט",
+    "parent_phone": "0544603693",
+    "parent_email": "hayat.ortal@gmail.com",
+    "children_summary": "אלמה מיה חייט (גיל 7, כיתה א׳) | יונתן לני חייט (גיל 4, גן נחשון)",
+    "children": [
+      {
+        "name": "אלמה מיה חייט",
+        "age": "7",
+        "gan": "כיתה א׳"
+      },
+      {
+        "name": "יונתן לני חייט",
+        "age": "4",
+        "gan": "גן נחשון"
+      }
+    ],
+    "start_date": "2026-08-16",
+    "end_date": "2026-08-25",
+    "missing_days": "11.08, 12.08, 13.08",
+    "allergies": "אין",
+    "notes": "",
+    "admin_notes": "",
+    "heard_from": "חברים",
+    "terms_agreed": "כן"
+  },
+  {
+    "id": "seed-006",
+    "created_at": "2026-05-16T18:28:11",
+    "status": "חדש",
+    "parent_first_name": "אופק",
+    "parent_last_name": "דהאן",
+    "parent_phone": "0545298777",
+    "parent_email": "ofekesem@gmail.com",
+    "children_summary": "ארבל (גיל 7, א)",
+    "children": [
+      {
+        "name": "ארבל",
+        "age": "7",
+        "gan": "א"
+      }
+    ],
+    "start_date": "2026-08-11",
+    "end_date": "2026-08-28",
+    "missing_days": "",
+    "allergies": "",
+    "notes": "",
+    "admin_notes": "",
+    "heard_from": "חוזרים",
+    "terms_agreed": "כן"
+  },
+  {
+    "id": "seed-007",
+    "created_at": "2026-05-16T18:28:48",
+    "status": "חדש",
+    "parent_first_name": "רעיה",
+    "parent_last_name": "זבולון",
+    "parent_phone": "0549770867",
+    "parent_email": "raya8950@gmail.com",
+    "children_summary": "אלמוג זבולון (גיל 6, גן חובה)",
+    "children": [
+      {
+        "name": "אלמוג זבולון",
+        "age": "6",
+        "gan": "גן חובה"
+      }
+    ],
+    "start_date": "2026-08-11",
+    "end_date": "2026-08-25",
+    "missing_days": "",
+    "allergies": "",
+    "notes": "",
+    "admin_notes": "",
+    "heard_from": "אחר",
+    "terms_agreed": "כן"
+  },
+  {
+    "id": "seed-008",
+    "created_at": "2026-05-16T18:28:50",
+    "status": "חדש",
+    "parent_first_name": "דינה",
+    "parent_last_name": "שפירו",
+    "parent_phone": "0528558755",
+    "parent_email": "dinka1979@gmail.com",
+    "children_summary": "ירדן פרלמן (גיל 5, גן חובה)",
+    "children": [
+      {
+        "name": "ירדן פרלמן",
+        "age": "5",
+        "gan": "גן חובה"
+      }
+    ],
+    "start_date": "2026-08-11",
+    "end_date": "2026-08-25",
+    "missing_days": "",
+    "allergies": "",
+    "notes": "",
+    "admin_notes": "",
+    "heard_from": "חוזרים",
+    "terms_agreed": "כן"
+  },
+  {
+    "id": "seed-009",
+    "created_at": "2026-05-16T18:29:58",
+    "status": "חדש",
+    "parent_first_name": "נטליה",
+    "parent_last_name": "יפרח",
+    "parent_phone": "0526358834",
+    "parent_email": "natalis1504@gmail.com",
+    "children_summary": "עמית יפרח (גיל 3, טרום טרום חובה)",
+    "children": [
+      {
+        "name": "עמית יפרח",
+        "age": "3",
+        "gan": "טרום טרום חובה"
+      }
+    ],
+    "start_date": "2026-08-11",
+    "end_date": "2026-08-25",
+    "missing_days": "",
+    "allergies": "",
+    "notes": "לא אוהב דברים לבנים כי פעם הייתה רגישות לחלב",
+    "admin_notes": "",
+    "heard_from": "חוזרים",
+    "terms_agreed": "כן"
+  },
+  {
+    "id": "seed-010",
+    "created_at": "2026-05-16T18:30:40",
+    "status": "חדש",
+    "parent_first_name": "דנה",
+    "parent_last_name": "סקול אוחנה",
+    "parent_phone": "0523723908",
+    "parent_email": "dsakol@gmail.com",
+    "children_summary": "אריאל אוחנה (גיל 6, כיתה א)",
+    "children": [
+      {
+        "name": "אריאל אוחנה",
+        "age": "6",
+        "gan": "כיתה א"
+      }
+    ],
+    "start_date": "2026-08-11",
+    "end_date": "2026-08-25",
+    "missing_days": "",
+    "allergies": "",
+    "notes": "",
+    "admin_notes": "",
+    "heard_from": "חוזרים",
+    "terms_agreed": "כן"
+  },
+  {
+    "id": "seed-011",
+    "created_at": "2026-05-16T18:31:06",
+    "status": "חדש",
+    "parent_first_name": "נופר",
+    "parent_last_name": "בטנוב",
+    "parent_phone": "0503855863",
+    "parent_email": "nofar23on@gmail.com",
+    "children_summary": "ניל (גיל 4, גן טרום חובה)",
+    "children": [
+      {
+        "name": "ניל",
+        "age": "4",
+        "gan": "גן טרום חובה"
+      }
+    ],
+    "start_date": "2026-08-11",
+    "end_date": "2026-08-20",
+    "missing_days": "",
+    "allergies": "",
+    "notes": "",
+    "admin_notes": "",
+    "heard_from": "חברים",
+    "terms_agreed": "כן"
+  },
+  {
+    "id": "seed-012",
+    "created_at": "2026-05-16T18:32:58",
+    "status": "חדש",
+    "parent_first_name": "מעיין",
+    "parent_last_name": "פוקס",
+    "parent_phone": "0526993282",
+    "parent_email": "mzohar07@gmail.com",
+    "children_summary": "תומר (גיל 7, כיתה א)",
+    "children": [
+      {
+        "name": "תומר",
+        "age": "7",
+        "gan": "כיתה א"
+      }
+    ],
+    "start_date": "2026-08-11",
+    "end_date": "2026-08-25",
+    "missing_days": "",
+    "allergies": "",
+    "notes": "",
+    "admin_notes": "",
+    "heard_from": "חוזרים",
+    "terms_agreed": "כן"
+  },
+  {
+    "id": "seed-013",
+    "created_at": "2026-05-16T18:33:05",
+    "status": "חדש",
+    "parent_first_name": "אייל",
+    "parent_last_name": "סבן",
+    "parent_phone": "0504633383",
+    "parent_email": "eyals111@gmail.com",
+    "children_summary": "רומי (גיל 6, גן חובה)",
+    "children": [
+      {
+        "name": "רומי",
+        "age": "6",
+        "gan": "גן חובה"
+      }
+    ],
+    "start_date": "2026-08-11",
+    "end_date": "2026-05-25",
+    "missing_days": "",
+    "allergies": "",
+    "notes": "",
+    "admin_notes": "",
+    "heard_from": "אחר",
+    "terms_agreed": "כן"
+  },
+  {
+    "id": "seed-014",
+    "created_at": "2026-05-16T18:33:20",
+    "status": "חדש",
+    "parent_first_name": "אלכסנדרה",
+    "parent_last_name": "מדבדובסקי",
+    "parent_phone": "0585605437",
+    "parent_email": "alexamedvedovskaya@gmail.com",
+    "children_summary": "מיכאל (גיל 5, נחשון)",
+    "children": [
+      {
+        "name": "מיכאל",
+        "age": "5",
+        "gan": "נחשון"
+      }
+    ],
+    "start_date": "2026-08-11",
+    "end_date": "2026-08-25",
+    "missing_days": "",
+    "allergies": "אין",
+    "notes": "",
+    "admin_notes": "",
+    "heard_from": "חוזרים",
+    "terms_agreed": "כן"
+  },
+  {
+    "id": "seed-015",
+    "created_at": "2026-05-16T18:40:41",
+    "status": "חדש",
+    "parent_first_name": "מריאנה",
+    "parent_last_name": "דימנשטיין",
+    "parent_phone": "0523979880",
+    "parent_email": "mariana.shpitz@gmail.com",
+    "children_summary": "דר (גיל 7, א)",
+    "children": [
+      {
+        "name": "דר",
+        "age": "7",
+        "gan": "א"
+      }
+    ],
+    "start_date": "2026-08-11",
+    "end_date": "2026-08-19",
+    "missing_days": "",
+    "allergies": "",
+    "notes": "",
+    "admin_notes": "",
+    "heard_from": "",
+    "terms_agreed": "כן"
+  },
+  {
+    "id": "seed-016",
+    "created_at": "2026-05-16T18:45:51",
+    "status": "חדש",
+    "parent_first_name": "קטי",
+    "parent_last_name": "חיימן",
+    "parent_phone": "0547571667",
+    "parent_email": "bennerkatherine@gmail.com",
+    "children_summary": "לילי רוז חיימן (גיל 5, גן חובה)",
+    "children": [
+      {
+        "name": "לילי רוז חיימן",
+        "age": "5",
+        "gan": "גן חובה"
+      }
+    ],
+    "start_date": "2026-08-11",
+    "end_date": "2026-08-25",
+    "missing_days": "",
+    "allergies": "",
+    "notes": "",
+    "admin_notes": "",
+    "heard_from": "חוזרים",
+    "terms_agreed": "כן"
+  },
+  {
+    "id": "seed-017",
+    "created_at": "2026-05-16T18:46:50",
+    "status": "חדש",
+    "parent_first_name": "מיטל",
+    "parent_last_name": "מלכה",
+    "parent_phone": "0526406474",
+    "parent_email": "meytal8752@gmail.com",
+    "children_summary": "אלמה אור  (גיל 5, גן חובה) | איימי אור  (גיל 3, טרום טרום חובה )",
+    "children": [
+      {
+        "name": "אלמה אור",
+        "age": "5",
+        "gan": "גן חובה"
+      },
+      {
+        "name": "איימי אור",
+        "age": "3",
+        "gan": "טרום טרום חובה"
+      }
+    ],
+    "start_date": "2026-08-11",
+    "end_date": "2026-08-25",
+    "missing_days": "",
+    "allergies": "אלמה - אלרגיה לפיסטוק וקשיו , אסור גם עלול להכיל",
+    "notes": "",
+    "admin_notes": "",
+    "heard_from": "חברים",
+    "terms_agreed": "כן"
+  },
+  {
+    "id": "seed-018",
+    "created_at": "2026-05-16T18:49:10",
+    "status": "חדש",
+    "parent_first_name": "ענת",
+    "parent_last_name": "אסולין שטרית",
+    "parent_phone": "0528393331",
+    "parent_email": "nattyas0808@gmail.com",
+    "children_summary": "עומר (גיל 6, חובה)",
+    "children": [
+      {
+        "name": "עומר",
+        "age": "6",
+        "gan": "חובה"
+      }
+    ],
+    "start_date": "2026-08-11",
+    "end_date": "2026-05-25",
+    "missing_days": "",
+    "allergies": "",
+    "notes": "",
+    "admin_notes": "",
+    "heard_from": "חוזרים",
+    "terms_agreed": "כן"
+  },
+  {
+    "id": "seed-019",
+    "created_at": "2026-05-16T18:53:27",
+    "status": "חדש",
+    "parent_first_name": "דניאל",
+    "parent_last_name": "לוין",
+    "parent_phone": "0528220936",
+    "parent_email": "daniellelevi6@gmail.com",
+    "children_summary": "יעל לוין (גיל 6, תמר) | יהב לוין (גיל 5, שיטה)",
+    "children": [
+      {
+        "name": "יעל לוין",
+        "age": "6",
+        "gan": "תמר"
+      },
+      {
+        "name": "יהב לוין",
+        "age": "5",
+        "gan": "שיטה"
+      }
+    ],
+    "start_date": "2026-08-11",
+    "end_date": "2026-08-25",
+    "missing_days": "",
+    "allergies": "",
+    "notes": "",
+    "admin_notes": "",
+    "heard_from": "אחר",
+    "terms_agreed": "כן"
+  },
+  {
+    "id": "seed-020",
+    "created_at": "2026-05-16T18:55:30",
+    "status": "חדש",
+    "parent_first_name": "שרית",
+    "parent_last_name": "ברנשטיין",
+    "parent_phone": "0506874760",
+    "parent_email": "saritbernstein@gmail.com",
+    "children_summary": "ניב (גיל 6, גן חובה)",
+    "children": [
+      {
+        "name": "ניב",
+        "age": "6",
+        "gan": "גן חובה"
+      }
+    ],
+    "start_date": "2026-08-11",
+    "end_date": "2026-08-25",
+    "missing_days": "",
+    "allergies": "",
+    "notes": "",
+    "admin_notes": "",
+    "heard_from": "חוזרים",
+    "terms_agreed": "כן"
+  },
+  {
+    "id": "seed-021",
+    "created_at": "2026-05-16T19:00:04",
+    "status": "חדש",
+    "parent_first_name": "רעות",
+    "parent_last_name": "גנון מירוצניק",
+    "parent_phone": "0527733318",
+    "parent_email": "reutganon@gmail.com",
+    "children_summary": "ליאן (גיל 5, נחשון)",
+    "children": [
+      {
+        "name": "ליאן",
+        "age": "5",
+        "gan": "נחשון"
+      }
+    ],
+    "start_date": "2026-08-16",
+    "end_date": "2026-08-25",
+    "missing_days": "",
+    "allergies": "",
+    "notes": "",
+    "admin_notes": "",
+    "heard_from": "חוזרים",
+    "terms_agreed": "כן"
+  },
+  {
+    "id": "seed-022",
+    "created_at": "2026-05-16T19:02:54",
+    "status": "חדש",
+    "parent_first_name": "טניה",
+    "parent_last_name": "חייטוב",
+    "parent_phone": "0525466320",
+    "parent_email": "tanya.danilov@gmail.com",
+    "children_summary": "לאון (גיל 5, גן חובה תמר)",
+    "children": [
+      {
+        "name": "לאון",
+        "age": "5",
+        "gan": "גן חובה תמר"
+      }
+    ],
+    "start_date": "2026-08-11",
+    "end_date": "2026-08-25",
+    "missing_days": "",
+    "allergies": "",
+    "notes": "",
+    "admin_notes": "",
+    "heard_from": "חוזרים",
+    "terms_agreed": "כן"
+  },
+  {
+    "id": "seed-023",
+    "created_at": "2026-05-16T19:16:26",
+    "status": "חדש",
+    "parent_first_name": "רומי",
+    "parent_last_name": "סבן",
+    "parent_phone": "0506306380",
+    "parent_email": "elimuller88@gmaul.com",
+    "children_summary": "רומי סבן (גיל 6, תמר)",
+    "children": [
+      {
+        "name": "רומי סבן",
+        "age": "6",
+        "gan": "תמר"
+      }
+    ],
+    "start_date": "2026-08-11",
+    "end_date": "2026-08-25",
+    "missing_days": "",
+    "allergies": "",
+    "notes": "",
+    "admin_notes": "",
+    "heard_from": "חוזרים",
+    "terms_agreed": "כן"
+  },
+  {
+    "id": "seed-024",
+    "created_at": "2026-05-16T19:19:35",
+    "status": "חדש",
+    "parent_first_name": "אלכסנדר",
+    "parent_last_name": "משצריאקוב",
+    "parent_phone": "0548033108",
+    "parent_email": "a0548033108@gmail.com",
+    "children_summary": "ליאור (גיל 5, גן)",
+    "children": [
+      {
+        "name": "ליאור",
+        "age": "5",
+        "gan": "גן"
+      }
+    ],
+    "start_date": "2026-08-11",
+    "end_date": "2026-08-25",
+    "missing_days": "",
+    "allergies": "",
+    "notes": "",
+    "admin_notes": "",
+    "heard_from": "חוזרים",
+    "terms_agreed": "כן"
+  },
+  {
+    "id": "seed-025",
+    "created_at": "2026-05-16T19:23:21",
+    "status": "חדש",
+    "parent_first_name": "סיון",
+    "parent_last_name": "אוליאל",
+    "parent_phone": "0546092621",
+    "parent_email": "sivan.uliel@gmail.com",
+    "children_summary": "ליעד (גיל 4, טרום טרום חובה)",
+    "children": [
+      {
+        "name": "ליעד",
+        "age": "4",
+        "gan": "טרום טרום חובה"
+      }
+    ],
+    "start_date": "2026-08-11",
+    "end_date": "2026-05-25",
+    "missing_days": "",
+    "allergies": "",
+    "notes": "",
+    "admin_notes": "",
+    "heard_from": "חוזרים",
+    "terms_agreed": "כן"
+  },
+  {
+    "id": "seed-026",
+    "created_at": "2026-05-16T19:48:58",
+    "status": "חדש",
+    "parent_first_name": "ליזה",
+    "parent_last_name": "לוי",
+    "parent_phone": "0525400271",
+    "parent_email": "elizabethlevy92@gmail.com",
+    "children_summary": "ליבר לוי (גיל 6, גן חובה ) | ארבל לוי (גיל 4, גן טרום חובה )",
+    "children": [
+      {
+        "name": "ליבר לוי",
+        "age": "6",
+        "gan": "גן חובה"
+      },
+      {
+        "name": "ארבל לוי",
+        "age": "4",
+        "gan": "גן טרום חובה"
+      }
+    ],
+    "start_date": "2026-08-11",
+    "end_date": "2026-05-25",
+    "missing_days": "",
+    "allergies": "ללא",
+    "notes": "",
+    "admin_notes": "",
+    "heard_from": "חברים",
+    "terms_agreed": "כן"
+  },
+  {
+    "id": "seed-027",
+    "created_at": "2026-05-16T19:51:42",
+    "status": "חדש",
+    "parent_first_name": "חן",
+    "parent_last_name": "מזרחי",
+    "parent_phone": "0523253656",
+    "parent_email": "chenzac38@gmail.com",
+    "children_summary": "אדל מזרחי (גיל 3, מעון- עולה לגן ערייה)",
+    "children": [
+      {
+        "name": "אדל מזרחי",
+        "age": "3",
+        "gan": "מעון- עולה לגן ערייה"
+      }
+    ],
+    "start_date": "2026-08-11",
+    "end_date": "2026-08-25",
+    "missing_days": "",
+    "allergies": "",
+    "notes": "",
+    "admin_notes": "",
+    "heard_from": "חברים",
+    "terms_agreed": "כן"
+  },
+  {
+    "id": "seed-028",
+    "created_at": "2026-05-16T19:56:57",
+    "status": "חדש",
+    "parent_first_name": "בתיה",
+    "parent_last_name": "כהן",
+    "parent_phone": "0522266708",
+    "parent_email": "batel1322@gmail.com",
+    "children_summary": "ירין כהן (גיל 4, גן טרום טרום חובה )גן חרוב()",
+    "children": [
+      {
+        "name": "ירין כהן",
+        "age": "4",
+        "gan": "גן טרום טרום חובה )גן חרוב("
+      }
+    ],
+    "start_date": "2026-08-11",
+    "end_date": "2026-05-25",
+    "missing_days": "",
+    "allergies": "אלרגיה לפול g6pd",
+    "notes": "",
+    "admin_notes": "",
+    "heard_from": "חוזרים",
+    "terms_agreed": "כן"
+  },
+  {
+    "id": "seed-029",
+    "created_at": "2026-05-16T20:29:22",
+    "status": "חדש",
+    "parent_first_name": "דניאל",
+    "parent_last_name": "בלגולה",
+    "parent_phone": "0546896656",
+    "parent_email": "Danipril@gmail.com",
+    "children_summary": "אדם (גיל 6, חובה) | יונתן (גיל 4, טרום חובה)",
+    "children": [
+      {
+        "name": "אדם",
+        "age": "6",
+        "gan": "חובה"
+      },
+      {
+        "name": "יונתן",
+        "age": "4",
+        "gan": "טרום חובה"
+      }
+    ],
+    "start_date": "2026-08-11",
+    "end_date": "2026-08-25",
+    "missing_days": "",
+    "allergies": "יונתן - אסטמה",
+    "notes": "",
+    "admin_notes": "",
+    "heard_from": "חוזרים",
+    "terms_agreed": "כן"
+  },
+  {
+    "id": "seed-030",
+    "created_at": "2026-05-16T20:29:34",
+    "status": "חדש",
+    "parent_first_name": "אורטל",
+    "parent_last_name": "סבג",
+    "parent_phone": "0527219997",
+    "parent_email": "optonway@gmail.com",
+    "children_summary": "אריאל (גיל 6, כיתה א)",
+    "children": [
+      {
+        "name": "אריאל",
+        "age": "6",
+        "gan": "כיתה א"
+      }
+    ],
+    "start_date": "2026-08-10",
+    "end_date": "2026-05-18",
+    "missing_days": "",
+    "allergies": "",
+    "notes": "",
+    "admin_notes": "",
+    "heard_from": "חוזרים",
+    "terms_agreed": "כן"
+  },
+  {
+    "id": "seed-031",
+    "created_at": "2026-05-16T20:45:09",
+    "status": "חדש",
+    "parent_first_name": "ענבל",
+    "parent_last_name": "כהן",
+    "parent_phone": "0524455648",
+    "parent_email": "inbalhirsh@gmail.com",
+    "children_summary": "עמית כהן (גיל 6, גן חובה)",
+    "children": [
+      {
+        "name": "עמית כהן",
+        "age": "6",
+        "gan": "גן חובה"
+      }
+    ],
+    "start_date": "2026-08-11",
+    "end_date": "2026-05-25",
+    "missing_days": "",
+    "allergies": "",
+    "notes": "",
+    "admin_notes": "",
+    "heard_from": "חוזרים",
+    "terms_agreed": "כן"
+  },
+  {
+    "id": "seed-032",
+    "created_at": "2026-05-16T20:55:07",
+    "status": "חדש",
+    "parent_first_name": "ויקי",
+    "parent_last_name": "בלוך",
+    "parent_phone": "0509442667",
+    "parent_email": "vicka.shay@gmail.com",
+    "children_summary": "תמר (גיל 5, גן תמר)",
+    "children": [
+      {
+        "name": "תמר",
+        "age": "5",
+        "gan": "גן תמר"
+      }
+    ],
+    "start_date": "2026-08-11",
+    "end_date": "2026-08-25",
+    "missing_days": "",
+    "allergies": "אין",
+    "notes": "",
+    "admin_notes": "",
+    "heard_from": "אחר",
+    "terms_agreed": "כן"
+  },
+  {
+    "id": "seed-033",
+    "created_at": "2026-05-16T21:44:59",
+    "status": "חדש",
+    "parent_first_name": "אפרת",
+    "parent_last_name": "צרפתי",
+    "parent_phone": "0546207014",
+    "parent_email": "efratz@kkl.org.il",
+    "children_summary": "יהלי צרפתי (גיל 6, גן חובה)",
+    "children": [
+      {
+        "name": "יהלי צרפתי",
+        "age": "6",
+        "gan": "גן חובה"
+      }
+    ],
+    "start_date": "2026-08-11",
+    "end_date": "2026-08-20",
+    "missing_days": "",
+    "allergies": "",
+    "notes": "",
+    "admin_notes": "",
+    "heard_from": "חוזרים",
+    "terms_agreed": "כן"
+  },
+  {
+    "id": "seed-034",
+    "created_at": "2026-05-16T21:48:09",
+    "status": "חדש",
+    "parent_first_name": "יסמין",
+    "parent_last_name": "לוי",
+    "parent_phone": "0545501682",
+    "parent_email": "er.yas19@gmail.com",
+    "children_summary": "אביתר לוי (גיל 3, גן טט״ח) | איתן לוי (גיל 5, גן טרום חובה)",
+    "children": [
+      {
+        "name": "אביתר לוי",
+        "age": "3",
+        "gan": "גן טט״ח"
+      },
+      {
+        "name": "איתן לוי",
+        "age": "5",
+        "gan": "גן טרום חובה"
+      }
+    ],
+    "start_date": "2026-08-11",
+    "end_date": "2026-08-25",
+    "missing_days": "",
+    "allergies": "",
+    "notes": "",
+    "admin_notes": "",
+    "heard_from": "חברים",
+    "terms_agreed": "כן"
+  }
+];
+
 
 let allRegistrations = [];
 let sortKey = 'created_at';
@@ -675,46 +1559,47 @@ async function loadData() {
   document.getElementById('loading').classList.remove('hidden');
   document.getElementById('content').classList.add('hidden');
 
+  // ברירת מחדל: הנרשמים המוטמעים בדף עצמו — תמיד מופיעים, בלי תלות בשום קובץ/שירות חיצוני
+  allRegistrations = JSON.parse(JSON.stringify(EMBEDDED_REGISTRATIONS));
+
+  // ניסיון לא-חובה: אם קיים registrations.json מעודכן באותו ריפו, נשתמש בו במקום
   try {
-    const res = await fetch(JSONBIN_URL + '/latest', {
-      headers: { 'X-Master-Key': JSONBIN_MASTER_KEY }
-    });
-    if (!res.ok) throw new Error('Failed to load: ' + res.status);
-    const data = await res.json();
-    const record = data.record || {};
-    allRegistrations = record.registrations || [];
-
-    renderTable();
-    updateStats();
-
-    document.getElementById('loading').classList.add('hidden');
-    document.getElementById('content').classList.remove('hidden');
-
-    if (allRegistrations.length === 0) {
-      showInfo('💡 עדיין לא נכנסו הרשמות. כשמישהו יירשם דרך האתר - ההרשמה תופיע כאן אוטומטית. לחצי על "🔄 רענן" כדי לראות עדכונים.');
+    const res = await fetch(DATA_URL + '?t=' + Date.now(), { cache: 'no-store' });
+    if (res.ok) {
+      const data = await res.json();
+      if (data && Array.isArray(data.registrations) && data.registrations.length) {
+        allRegistrations = data.registrations;
+      }
     }
   } catch (err) {
-    document.getElementById('loading').classList.add('hidden');
-    showError('שגיאה בטעינה: ' + err.message);
+    // אין קובץ חיצוני — ממשיכים עם הנרשמים המוטמעים
+  }
+
+  renderTable();
+  updateStats();
+
+  document.getElementById('loading').classList.add('hidden');
+  document.getElementById('content').classList.remove('hidden');
+
+  if (allRegistrations.length === 0) {
+    showInfo('💡 אין כרגע נרשמים להצגה.');
   }
 }
 
+function downloadJSON() {
+  const blob = new Blob([JSON.stringify({ registrations: allRegistrations }, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'registrations.json';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// שמירה במצב GitHub-only: מורידה קובץ registrations.json מעודכן שצריך להעלות לריפו
 async function saveData() {
-  try {
-    const res = await fetch(JSONBIN_URL, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Master-Key': JSONBIN_MASTER_KEY
-      },
-      body: JSON.stringify({ registrations: allRegistrations })
-    });
-    if (!res.ok) throw new Error('Failed to save: ' + res.status);
-    return true;
-  } catch (err) {
-    showError('שגיאה בשמירה: ' + err.message);
-    return false;
-  }
+  downloadJSON();
+  return true;
 }
 
 // ===== Rendering =====
@@ -906,8 +1791,7 @@ async function saveEdit() {
     closeModal();
     renderTable();
     updateStats();
-    showInfo('✅ השינויים נשמרו בהצלחה');
-    setTimeout(hideMessages, 3000);
+    showInfo('💾 ירד הקובץ registrations.json עם השינויים. כדי לשמור לצמיתות: גררי אותו לריפו keytana-shiri ב-GitHub (במקום הקובץ הקיים) → "Commit changes". עד אז השינוי קיים רק בדפדפן הזה.');
   }
 }
 
@@ -925,8 +1809,8 @@ async function deleteRegistration() {
     closeModal();
     renderTable();
     updateStats();
-    showInfo('🗑️ ההרשמה נמחקה בהצלחה');
-    setTimeout(hideMessages, 3000);
+    showInfo('🗑️ ההרשמה הוסרה. ירד הקובץ registrations.json המעודכן — העלי אותו לריפו ב-GitHub כדי לשמור לצמיתות.');
+    setTimeout(hideMessages, 6000);
   }
 }
 
@@ -941,8 +1825,8 @@ async function confirmDelete(id) {
   if (ok) {
     renderTable();
     updateStats();
-    showInfo('🗑️ ההרשמה נמחקה בהצלחה');
-    setTimeout(hideMessages, 3000);
+    showInfo('🗑️ ההרשמה הוסרה. ירד הקובץ registrations.json המעודכן — העלי אותו לריפו ב-GitHub כדי לשמור לצמיתות.');
+    setTimeout(hideMessages, 6000);
   }
 }
 
