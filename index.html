@@ -237,6 +237,8 @@
   .error-msg.show { display: block; }
   footer { text-align: center; padding: 24px 16px; color: var(--muted); font-size: 13px; }
 </style>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 </head>
 <body>
 <div class="wrap">
@@ -347,12 +349,22 @@
 //
 //  כדי לפתוח שוב את ההרשמה בעתיד: שנה false ל-true ושמור (Commit)
 // ============================================================
-const REGISTRATION_OPEN = false;
+const REGISTRATION_OPEN = true;
+
+// ===== Firebase (שמירת הרשמות חדשות — מופיעות אוטומטית בדשבורד) =====
+const firebaseConfig = {
+  apiKey: "AIzaSyCM-orSuzfoG_pK2qFUPnuIQRiCXi9pBL4",
+  authDomain: "keytanat-shiri.firebaseapp.com",
+  databaseURL: "https://keytanat-shiri-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "keytanat-shiri",
+  storageBucket: "keytanat-shiri.firebasestorage.app",
+  messagingSenderId: "936210340060",
+  appId: "1:936210340060:web:970a35ec0b72040e017c19"
+};
+firebase.initializeApp(firebaseConfig);
+const fbDB = firebase.database();
 
 // ===== Configuration =====
-const JSONBIN_BIN_ID = '6a079ba2adc21f119aa7bce4';
-const JSONBIN_MASTER_KEY = '$2a$10$Cvlv0hEGbc5L20vdFXDSxuuUNUpZIjxFtp.o4BmPDzb06mzQX0P8S';
-const JSONBIN_URL = 'https://api.jsonbin.io/v3/b/' + JSONBIN_BIN_ID;
 // EmailJS - sends a beautiful confirmation email to each parent who registers
 const EMAILJS_SERVICE_ID = 'service_1lmf359';
 const EMAILJS_TEMPLATE_ID = 'template_lbuelop';
@@ -404,6 +416,7 @@ function removeChild(num) {
 
 async function submitForm(e) {
   e.preventDefault();
+  if (!REGISTRATION_OPEN) return; // ההרשמה סגורה — אין שליחה
   const form = e.target;
   const btn = document.getElementById('submit-btn');
   const errorMsg = document.getElementById('error-msg');
@@ -450,27 +463,8 @@ async function submitForm(e) {
   };
 
   try {
-    // Step 1: Save to JSONBin
-    const getRes = await fetch(JSONBIN_URL + '/latest', {
-      headers: { 'X-Master-Key': JSONBIN_MASTER_KEY }
-    });
-    let current = { registrations: [] };
-    if (getRes.ok) {
-      const data = await getRes.json();
-      current = data.record || { registrations: [] };
-      if (!current.registrations) current.registrations = [];
-    }
-    current.registrations.push(registration);
-
-    const putRes = await fetch(JSONBIN_URL, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Master-Key': JSONBIN_MASTER_KEY
-      },
-      body: JSON.stringify(current)
-    });
-    if (!putRes.ok) throw new Error('Failed to save: ' + putRes.status);
+    // Step 1: Save the registration to Firebase (this is what makes it appear in the dashboard)
+    await fbDB.ref('registrations/' + registration.id).set(registration);
 
     // Step 2: Send beautiful confirmation email to the parent via EmailJS REST API
     // (using direct API call instead of the SDK, which is blocked by GitHub Pages CSP)

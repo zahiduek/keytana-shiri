@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ניהול הרשמות - קייטנת שירי</title>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <style>
   :root {
     --pink: #e91e63;
@@ -625,10 +627,21 @@
 
 <script>
 // ===== Configuration =====
-// הנתונים נשמרים בקובץ registrations.json באותו ריפו ב-GitHub
-const DATA_URL = 'registrations.json';
 const DASHBOARD_PASSWORD = 'shiri2026';
 const SESSION_KEY = 'shiri_dashboard_authenticated';
+
+// ===== Firebase (מקור הנתונים — נרשמים נשמרים ומופיעים בזמן אמת) =====
+const firebaseConfig = {
+  apiKey: "AIzaSyCM-orSuzfoG_pK2qFUPnuIQRiCXi9pBL4",
+  authDomain: "keytanat-shiri.firebaseapp.com",
+  databaseURL: "https://keytanat-shiri-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "keytanat-shiri",
+  storageBucket: "keytanat-shiri.firebasestorage.app",
+  messagingSenderId: "936210340060",
+  appId: "1:936210340060:web:970a35ec0b72040e017c19"
+};
+firebase.initializeApp(firebaseConfig);
+const fbDB = firebase.database();
 
 // ===== נרשמים מוטמעים בתוך הדף (ברירת מחדל — עובד גם בלי קבצים חיצוניים) =====
 const EMBEDDED_REGISTRATIONS = [
@@ -1554,52 +1567,81 @@ function checkAuth() {
 }
 
 // ===== Data Loading =====
+// טוען פעם אחת את 34 הקיימים ל-Firebase (אם עוד לא נטענו), ואז מאזין בזמן אמת
+async function ensureSeeded() {
+  const flag = await fbDB.ref('meta/seeded').once('value');
+  if (!flag.val()) {
+    const updates = {};
+    EMBEDDED_REGISTRATIONS.forEach(function(r) { updates['registrations/' + r.id] = r; });
+    updates['meta/seeded'] = true;
+    await fbDB.ref().update(updates);
+  }
+}
+
+let fbListenerAttached = false;
+
 async function loadData() {
   hideMessages();
   document.getElementById('loading').classList.remove('hidden');
   document.getElementById('content').classList.add('hidden');
 
-  // ברירת מחדל: הנרשמים המוטמעים בדף עצמו — תמיד מופיעים, בלי תלות בשום קובץ/שירות חיצוני
-  allRegistrations = JSON.parse(JSON.stringify(EMBEDDED_REGISTRATIONS));
-
-  // ניסיון לא-חובה: אם קיים registrations.json מעודכן באותו ריפו, נשתמש בו במקום
   try {
-    const res = await fetch(DATA_URL + '?t=' + Date.now(), { cache: 'no-store' });
-    if (res.ok) {
-      const data = await res.json();
-      if (data && Array.isArray(data.registrations) && data.registrations.length) {
-        allRegistrations = data.registrations;
-      }
+    await ensureSeeded();
+
+    // מאזין חי: כל שינוי ב-Firebase (הרשמה חדשה / עריכה / מחיקה) מתעדכן כאן מיד
+    if (!fbListenerAttached) {
+      fbListenerAttached = true;
+      fbDB.ref('registrations').on('value', function(snap) {
+        const val = snap.val() || {};
+        allRegistrations = Object.keys(val).map(function(k) { return val[k]; });
+        allRegistrations.sort(function(a, b) {
+          return new Date(a.created_at || 0) - new Date(b.created_at || 0);
+        });
+        renderTable();
+        updateStats();
+        document.getElementById('loading').classList.add('hidden');
+        document.getElementById('content').classList.remove('hidden');
+        if (allRegistrations.length === 0) {
+          showInfo('💡 אין כרגע נרשמים להצגה.');
+        }
+      }, function(err) {
+        // שגיאת חיבור — נציג את הנרשמים המוטמעים כגיבוי
+        allRegistrations = JSON.parse(JSON.stringify(EMBEDDED_REGISTRATIONS));
+        renderTable();
+        updateStats();
+        document.getElementById('loading').classList.add('hidden');
+        document.getElementById('content').classList.remove('hidden');
+        showError('שגיאת חיבור ל-Firebase — מוצגים הנרשמים השמורים. ' + (err && err.message ? err.message : ''));
+      });
     }
   } catch (err) {
-    // אין קובץ חיצוני — ממשיכים עם הנרשמים המוטמעים
-  }
-
-  renderTable();
-  updateStats();
-
-  document.getElementById('loading').classList.add('hidden');
-  document.getElementById('content').classList.remove('hidden');
-
-  if (allRegistrations.length === 0) {
-    showInfo('💡 אין כרגע נרשמים להצגה.');
+    // נפילה מלאה — גיבוי לנרשמים המוטמעים
+    allRegistrations = JSON.parse(JSON.stringify(EMBEDDED_REGISTRATIONS));
+    renderTable();
+    updateStats();
+    document.getElementById('loading').classList.add('hidden');
+    document.getElementById('content').classList.remove('hidden');
+    showError('שגיאה בטעינה: ' + err.message);
   }
 }
 
+// גיבוי ידני (לא חובה) — מוריד עותק JSON של הנתונים הנוכחיים
 function downloadJSON() {
   const blob = new Blob([JSON.stringify({ registrations: allRegistrations }, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = 'registrations.json';
+  a.download = 'registrations-backup.json';
   a.click();
   URL.revokeObjectURL(url);
 }
 
-// שמירה במצב GitHub-only: מורידה קובץ registrations.json מעודכן שצריך להעלות לריפו
-async function saveData() {
-  downloadJSON();
-  return true;
+// כתיבה/מחיקה ישירות ל-Firebase — המאזין החי מרענן את התצוגה אוטומטית
+async function fbWriteRecord(record) {
+  await fbDB.ref('registrations/' + record.id).set(record);
+}
+async function fbDeleteRecord(id) {
+  await fbDB.ref('registrations/' + id).remove();
 }
 
 // ===== Rendering =====
@@ -1732,9 +1774,11 @@ async function quickStatus(id) {
   const nextIdx = (statuses.indexOf(current) + 1) % statuses.length;
   r.status = statuses[nextIdx];
 
-  renderTable();
-  updateStats();
-  await saveData();
+  try {
+    await fbWriteRecord(r);
+  } catch (err) {
+    showError('שגיאה בעדכון הסטטוס: ' + (err && err.message ? err.message : err));
+  }
 }
 
 // ===== Modal / Edit =====
@@ -1786,12 +1830,13 @@ async function saveEdit() {
   r.admin_notes = document.getElementById('edit-admin-notes').value;
   r.status = document.getElementById('edit-status').value;
 
-  const ok = await saveData();
-  if (ok) {
+  try {
+    await fbWriteRecord(r);
     closeModal();
-    renderTable();
-    updateStats();
-    showInfo('💾 ירד הקובץ registrations.json עם השינויים. כדי לשמור לצמיתות: גררי אותו לריפו keytana-shiri ב-GitHub (במקום הקובץ הקיים) → "Commit changes". עד אז השינוי קיים רק בדפדפן הזה.');
+    showInfo('✅ השינויים נשמרו.');
+    setTimeout(hideMessages, 3000);
+  } catch (err) {
+    showError('שגיאה בשמירה: ' + (err && err.message ? err.message : err));
   }
 }
 
@@ -1803,14 +1848,13 @@ async function deleteRegistration() {
   const name = ((r.parent_first_name || '') + ' ' + (r.parent_last_name || '')).trim();
   if (!confirm('האם למחוק לצמיתות את ההרשמה של "' + (name || 'נרשם זה') + '"?\n\nפעולה זו לא ניתנת לביטול.')) return;
 
-  allRegistrations = allRegistrations.filter(x => x.id !== currentEditId);
-  const ok = await saveData();
-  if (ok) {
+  try {
+    await fbDeleteRecord(currentEditId);
     closeModal();
-    renderTable();
-    updateStats();
-    showInfo('🗑️ ההרשמה הוסרה. ירד הקובץ registrations.json המעודכן — העלי אותו לריפו ב-GitHub כדי לשמור לצמיתות.');
-    setTimeout(hideMessages, 6000);
+    showInfo('🗑️ ההרשמה נמחקה.');
+    setTimeout(hideMessages, 3000);
+  } catch (err) {
+    showError('שגיאה במחיקה: ' + (err && err.message ? err.message : err));
   }
 }
 
@@ -1820,13 +1864,12 @@ async function confirmDelete(id) {
   const name = ((r.parent_first_name || '') + ' ' + (r.parent_last_name || '')).trim();
   if (!confirm('האם למחוק לצמיתות את ההרשמה של "' + (name || 'נרשם זה') + '"?\n\nפעולה זו לא ניתנת לביטול.')) return;
 
-  allRegistrations = allRegistrations.filter(x => x.id !== id);
-  const ok = await saveData();
-  if (ok) {
-    renderTable();
-    updateStats();
-    showInfo('🗑️ ההרשמה הוסרה. ירד הקובץ registrations.json המעודכן — העלי אותו לריפו ב-GitHub כדי לשמור לצמיתות.');
-    setTimeout(hideMessages, 6000);
+  try {
+    await fbDeleteRecord(id);
+    showInfo('🗑️ ההרשמה נמחקה.');
+    setTimeout(hideMessages, 3000);
+  } catch (err) {
+    showError('שגיאה במחיקה: ' + (err && err.message ? err.message : err));
   }
 }
 
