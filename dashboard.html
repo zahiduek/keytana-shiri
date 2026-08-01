@@ -3,1961 +3,214 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ניהול הרשמות - קייטנת שירי</title>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<title>קייטנת שירי – ניהול</title>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700;900&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --pink: #e91e63;
-    --pink-light: #fdf2f8;
-    --pink-dark: #c2185b;
-    --yellow: #fbbf24;
-    --green: #16a34a;
-    --green-light: #dcfce7;
-    --blue: #2563eb;
-    --blue-light: #dbeafe;
-    --purple: #9333ea;
-    --red: #dc2626;
-    --red-light: #fee2e2;
-    --orange: #ea580c;
-    --orange-light: #fed7aa;
-    --gray: #6b7280;
-    --bg: #f6f7fb;
-    --card: #ffffff;
-    --text: #1f2937;
-    --muted: #6b7280;
-    --border: #e5e7eb;
-  }
-  * { box-sizing: border-box; }
-  html, body {
-    margin: 0; padding: 0;
-    background: var(--bg);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Heebo", Arial, sans-serif;
-    color: var(--text);
-    min-height: 100vh;
-  }
-  .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
-
-  /* ===== Login Screen ===== */
-  .login-screen {
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: linear-gradient(135deg, var(--pink), var(--purple));
-    padding: 20px;
-  }
-  .login-card {
-    background: white;
-    border-radius: 24px;
-    padding: 40px 32px;
-    max-width: 420px;
-    width: 100%;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
-    text-align: center;
-  }
-  .login-card .lock-icon { font-size: 56px; margin-bottom: 16px; }
-  .login-card h1 { margin: 0 0 8px; color: var(--pink); font-size: 28px; }
-  .login-card .subtitle { color: var(--muted); margin-bottom: 32px; }
-  .login-card input {
-    width: 100%; padding: 14px 18px;
-    border: 2px solid var(--border); border-radius: 12px;
-    font-size: 16px; font-family: inherit;
-    text-align: center; direction: ltr;
-    margin-bottom: 16px;
-  }
-  .login-card input:focus {
-    outline: none; border-color: var(--pink);
-    box-shadow: 0 0 0 4px rgba(233,30,99,0.1);
-  }
-  .login-card button {
-    width: 100%;
-    background: linear-gradient(135deg, var(--pink), var(--purple));
-    color: white; border: none;
-    padding: 14px; border-radius: 12px;
-    font-size: 17px; font-weight: bold;
-    cursor: pointer; font-family: inherit;
-  }
-  .login-error {
-    background: #fef2f2; color: #991b1b;
-    padding: 12px; border-radius: 8px;
-    margin-bottom: 16px; display: none;
-  }
-  .login-error.show { display: block; }
-
-  /* ===== Header ===== */
-  .header {
-    background: linear-gradient(135deg, var(--pink), var(--purple));
-    color: white;
-    padding: 24px 32px;
-    border-radius: 16px;
-    margin-bottom: 24px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 12px;
-  }
-  .header h1 { margin: 0; font-size: 26px; }
-  .header .subtitle { opacity: 0.9; font-size: 14px; margin-top: 4px; }
-  .header-actions { display: flex; gap: 8px; flex-wrap: wrap; }
-  .btn {
-    background: white; color: var(--pink);
-    border: none; padding: 10px 18px;
-    border-radius: 999px;
-    font-weight: bold; cursor: pointer;
-    font-size: 14px; font-family: inherit;
-    transition: transform 0.1s;
-    display: inline-flex; align-items: center; gap: 6px;
-  }
-  .btn:hover { transform: translateY(-1px); }
-  .btn-ghost {
-    background: transparent; color: white;
-    border: 2px solid rgba(255,255,255,0.4);
-  }
-
-  /* ===== Stats Cards ===== */
-  .stats {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 16px;
-    margin-bottom: 24px;
-  }
-  .stat {
-    background: white; border-radius: 14px;
-    padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.04);
-    border-right: 4px solid var(--pink);
-    position: relative; overflow: hidden;
-    transition: transform 0.15s;
-  }
-  .stat:hover { transform: translateY(-2px); }
-  .stat:nth-child(1) { border-right-color: var(--pink); }
-  .stat:nth-child(2) { border-right-color: var(--orange); }
-  .stat:nth-child(3) { border-right-color: var(--green); }
-  .stat:nth-child(4) { border-right-color: var(--blue); }
-  .stat:nth-child(5) { border-right-color: var(--red); }
-  .stat:nth-child(6) { border-right-color: var(--purple); }
-  .stat-value { font-size: 32px; font-weight: bold; color: var(--text); line-height: 1; }
-  .stat-label { font-size: 13px; color: var(--muted); margin-top: 6px; font-weight: 500; }
-  .stat-icon {
-    position: absolute; top: 16px; left: 16px;
-    font-size: 28px; opacity: 0.3;
-  }
-
-  /* ===== Toolbar ===== */
-  .toolbar {
-    background: white;
-    border-radius: 14px;
-    padding: 16px;
-    margin-bottom: 16px;
-    display: flex;
-    gap: 12px;
-    flex-wrap: wrap;
-    align-items: center;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.04);
-  }
-  .search {
-    flex: 1; min-width: 200px;
-    padding: 11px 16px;
-    border: 2px solid var(--border); border-radius: 10px;
-    font-size: 15px; font-family: inherit;
-  }
-  .search:focus {
-    outline: none; border-color: var(--pink);
-    box-shadow: 0 0 0 3px rgba(233,30,99,0.1);
-  }
-  .filter-select {
-    padding: 11px 14px;
-    border: 2px solid var(--border); border-radius: 10px;
-    font-size: 14px; font-family: inherit;
-    background: white; cursor: pointer;
-  }
-  .toolbar-btn {
-    padding: 10px 16px;
-    background: var(--pink); color: white;
-    border: none; border-radius: 10px;
-    font-weight: bold; cursor: pointer;
-    font-family: inherit; font-size: 14px;
-    display: inline-flex; align-items: center; gap: 6px;
-  }
-  .toolbar-btn:hover { background: var(--pink-dark); }
-  .toolbar-btn.secondary { background: var(--blue); }
-  .toolbar-btn.secondary:hover { background: #1e40af; }
-
-  /* ===== Table ===== */
-  .table-wrap {
-    overflow-x: auto;
-    background: white;
-    border-radius: 14px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.04);
-  }
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 14px;
-  }
-  thead { background: linear-gradient(135deg, var(--pink-light), #f3e8ff); }
-  th {
-    text-align: right;
-    padding: 14px 12px;
-    font-weight: bold;
-    color: var(--text);
-    border-bottom: 2px solid var(--border);
-    white-space: nowrap;
-    cursor: pointer;
-    user-select: none;
-    font-size: 13px;
-  }
-  th:hover { filter: brightness(0.96); }
-  th .sort-icon { opacity: 0.4; margin-right: 4px; font-size: 11px; }
-  th.sorted-asc .sort-icon::after { content: ' ↑'; opacity: 1; color: var(--pink); }
-  th.sorted-desc .sort-icon::after { content: ' ↓'; opacity: 1; color: var(--pink); }
-  td {
-    padding: 12px;
-    border-bottom: 1px solid var(--border);
-    vertical-align: middle;
-  }
-  tr:hover td { background: #fafafa; }
-  tr:last-child td { border-bottom: none; }
-  .row-num { color: var(--muted); font-size: 12px; width: 36px; text-align: center; }
-  .date-cell { white-space: nowrap; color: var(--muted); font-size: 12px; }
-  .name-cell { font-weight: bold; }
-  .phone-link, .email-link {
-    text-decoration: none; font-weight: 600;
-  }
-  .phone-link {
-    color: var(--green); direction: ltr;
-    display: inline-block; font-size: 14px;
-  }
-  .email-link {
-    color: var(--blue); direction: ltr;
-    display: inline-block; font-size: 13px;
-  }
-  .phone-link:hover, .email-link:hover { text-decoration: underline; }
-  .status-badge {
-    display: inline-block;
-    padding: 4px 12px;
-    border-radius: 999px;
-    font-size: 12px;
-    font-weight: bold;
-    cursor: pointer;
-    border: 2px solid transparent;
-    transition: all 0.15s;
-  }
-  .status-חדש {
-    background: var(--orange-light); color: var(--orange);
-    border-color: var(--orange);
-  }
-  .status-אושר {
-    background: var(--blue-light); color: var(--blue);
-    border-color: var(--blue);
-  }
-  .status-שולם {
-    background: var(--green-light); color: var(--green);
-    border-color: var(--green);
-  }
-  .status-ביטל {
-    background: var(--red-light); color: var(--red);
-    border-color: var(--red);
-  }
-  .action-btn {
-    background: none; border: none;
-    cursor: pointer; font-size: 18px;
-    padding: 6px; border-radius: 8px;
-    transition: background 0.15s;
-  }
-  .action-btn:hover { background: #f3f4f6; }
-  .action-btn.delete:hover { background: var(--red-light); }
-  .actions-cell {
-    display: flex; gap: 4px;
-    justify-content: center;
-  }
-  .empty {
-    text-align: center;
-    padding: 60px 20px;
-    color: var(--muted);
-  }
-  .empty-icon { font-size: 52px; margin-bottom: 12px; }
-  .empty h3 { margin: 0 0 8px; color: var(--text); }
-  .loading {
-    text-align: center;
-    padding: 60px 20px;
-    color: var(--muted);
-  }
-  .loading-spinner {
-    font-size: 32px;
-    animation: spin 1s linear infinite;
-    display: inline-block;
-  }
-  @keyframes spin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
-  }
-  .info-banner {
-    background: #eff6ff;
-    color: #1e40af;
-    padding: 16px;
-    border-radius: 10px;
-    margin: 16px 0;
-    border-right: 4px solid var(--blue);
-  }
-  .error-banner {
-    background: #fef2f2;
-    color: #991b1b;
-    padding: 16px;
-    border-radius: 10px;
-    margin: 16px 0;
-    border-right: 4px solid var(--red);
-  }
-  .hidden { display: none !important; }
-
-  /* ===== Modal ===== */
-  .modal-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.5);
-    display: none;
-    align-items: center;
-    justify-content: center;
-    z-index: 100;
-    padding: 20px;
-  }
-  .modal-overlay.show { display: flex; }
-  .modal {
-    background: white;
-    border-radius: 16px;
-    max-width: 600px;
-    width: 100%;
-    max-height: 90vh;
-    overflow-y: auto;
-    padding: 28px;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
-  }
-  .modal h2 {
-    margin: 0 0 4px;
-    color: var(--pink);
-    font-size: 24px;
-  }
-  .modal .modal-subtitle {
-    color: var(--muted);
-    margin-bottom: 24px;
-    font-size: 14px;
-  }
-  .modal-row { margin-bottom: 14px; }
-  .modal-row label {
-    display: block;
-    font-weight: bold;
-    margin-bottom: 6px;
-    font-size: 13px;
-    color: var(--text);
-  }
-  .modal-row input, .modal-row textarea, .modal-row select {
-    width: 100%; padding: 10px 12px;
-    border: 2px solid var(--border); border-radius: 10px;
-    font-size: 15px; font-family: inherit;
-  }
-  .modal-row input:focus, .modal-row textarea:focus, .modal-row select:focus {
-    outline: none; border-color: var(--pink);
-  }
-  .modal-row textarea { resize: vertical; min-height: 60px; }
-  .modal-section {
-    background: #f9fafb;
-    padding: 14px;
-    border-radius: 10px;
-    margin-bottom: 16px;
-  }
-  .modal-section h3 {
-    margin: 0 0 12px;
-    font-size: 15px;
-    color: var(--pink-dark);
-  }
-  .modal-actions {
-    display: flex;
-    gap: 10px;
-    margin-top: 20px;
-    justify-content: flex-end;
-  }
-  .modal-actions button {
-    padding: 11px 22px;
-    border: none;
-    border-radius: 10px;
-    font-weight: bold;
-    cursor: pointer;
-    font-family: inherit;
-    font-size: 14px;
-  }
-  .btn-save {
-    background: var(--green); color: white;
-  }
-  .btn-cancel {
-    background: #e5e7eb; color: var(--text);
-  }
-  .btn-delete {
-    background: var(--red); color: white;
-  }
-
-  /* ===== Detail view ===== */
-  .detail-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px 16px;
-    font-size: 14px;
-  }
-  .detail-grid .label { color: var(--muted); }
-  .detail-grid .value { font-weight: 500; }
-  @media (max-width: 600px) {
-    .detail-grid { grid-template-columns: 1fr; }
-    .container { padding: 12px; }
-    .header { padding: 18px 20px; }
-    .header h1 { font-size: 20px; }
-    th, td { padding: 8px; font-size: 12px; }
-    .stat-value { font-size: 24px; }
-  }
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Heebo',sans-serif;background:#f5f5f7;min-height:100vh;padding:16px;}
+.container{max-width:900px;margin:0 auto;}
+.header{background:linear-gradient(135deg,#FF1493,#C2185B);color:#fff;padding:20px 24px;border-radius:16px;margin-bottom:16px;text-align:center;box-shadow:0 4px 20px rgba(194,24,91,0.3);}
+.header h1{font-size:24px;font-weight:900;margin-bottom:6px;}
+.header p{opacity:0.9;font-size:14px;}
+.login-box{background:#fff;padding:30px;border-radius:16px;max-width:400px;margin:60px auto;box-shadow:0 4px 20px rgba(0,0,0,0.1);text-align:center;}
+.login-box h2{color:#C2185B;margin-bottom:20px;}
+.login-box input{width:100%;padding:14px;border:2px solid #e1e1e1;border-radius:12px;font-size:16px;margin-bottom:14px;font-family:'Heebo',sans-serif;text-align:center;}
+.login-box button{width:100%;padding:14px;background:#C2185B;color:#fff;border:none;border-radius:12px;font-size:16px;font-weight:900;cursor:pointer;font-family:'Heebo',sans-serif;}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:16px;}
+.stat-card{background:#fff;padding:16px;border-radius:14px;text-align:center;box-shadow:0 2px 10px rgba(0,0,0,0.06);}
+.stat-num{font-size:28px;font-weight:900;color:#C2185B;}
+.stat-label{font-size:13px;color:#666;margin-top:4px;}
+.actions{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;}
+.btn{padding:10px 18px;border-radius:12px;border:none;font-size:14px;font-weight:700;cursor:pointer;font-family:'Heebo',sans-serif;}
+.btn-refresh{background:#3F51B5;color:#fff;}
+.btn-csv{background:#4CAF50;color:#fff;}
+.reg-list{display:flex;flex-direction:column;gap:12px;}
+.reg-card{background:#fff;padding:16px;border-radius:14px;box-shadow:0 2px 10px rgba(0,0,0,0.06);border-right:4px solid #FFD600;}
+.reg-card.status-approved{border-right-color:#4CAF50;}
+.reg-card.status-paid{border-right-color:#2196F3;}
+.reg-card.status-cancelled{border-right-color:#FF5252;opacity:0.6;}
+.reg-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;flex-wrap:wrap;gap:8px;}
+.reg-parent{font-size:17px;font-weight:900;color:#333;}
+.reg-date{font-size:12px;color:#999;}
+.status-badge{padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700;}
+.badge-new{background:#FFF9C4;color:#F57F17;}
+.badge-approved{background:#C8E6C9;color:#2E7D32;}
+.badge-paid{background:#BBDEFB;color:#1565C0;}
+.badge-cancelled{background:#FFCDD2;color:#C62828;}
+.reg-details{color:#555;font-size:14px;line-height:1.7;}
+.reg-details strong{color:#333;}
+.child-item{background:#FFF9E6;padding:8px 12px;border-radius:10px;margin:6px 0;font-size:13px;}
+.reg-actions{display:flex;gap:6px;margin-top:12px;flex-wrap:wrap;}
+.mini-btn{padding:6px 12px;border-radius:8px;border:none;font-size:12px;font-weight:700;cursor:pointer;font-family:'Heebo',sans-serif;}
+.mini-btn-call{background:#4CAF50;color:#fff;}
+.mini-btn-wa{background:#25D366;color:#fff;}
+.mini-btn-status{background:#e0e0e0;color:#333;}
+.mini-btn-delete{background:#FF5252;color:#fff;}
+a{text-decoration:none;}
+.empty{text-align:center;padding:40px;color:#999;}
 </style>
 </head>
 <body>
 
-<!-- Login Screen -->
-<div id="login-screen" class="login-screen">
-  <div class="login-card">
-    <div class="lock-icon">🔐</div>
-    <h1>ניהול קייטנת שירי</h1>
-    <p class="subtitle">דשבורד פרטי לניהול הרשמות</p>
-    <div class="login-error" id="login-error">סיסמה שגויה. נסי שוב.</div>
-    <form onsubmit="login(event)">
-      <input type="password" id="password-input" placeholder="הקלידי סיסמה" autofocus required>
-      <button type="submit">כניסה ←</button>
-    </form>
-  </div>
+<div id="loginBox" class="login-box">
+  <h2>🔐 כניסת מנהל</h2>
+  <input type="password" id="pwd" placeholder="הקלד/י סיסמה" onkeypress="if(event.key==='Enter')doLogin()">
+  <button onclick="doLogin()">כניסה</button>
 </div>
 
-<!-- Dashboard -->
-<div id="dashboard" class="container hidden">
-
+<div id="app" class="container" style="display:none;">
   <div class="header">
-    <div>
-      <h1>📋 ניהול הרשמות - קייטנת שירי</h1>
-      <div class="subtitle">קיץ 2026 • 11-25.08.2026</div>
-    </div>
-    <div class="header-actions">
-      <button class="btn btn-ghost" onclick="loadData()">🔄 רענן</button>
-      <button class="btn btn-ghost" onclick="exportCSV()">📥 הורד אקסל</button>
-      <button class="btn btn-ghost" onclick="logout()">🚪 יציאה</button>
-    </div>
+    <h1>⚙ ניהול הרשמות - קייטנת שירי</h1>
+    <p>קיץ 2026 • 11.8–25.8</p>
   </div>
-
-  <!-- Stats -->
-  <div class="stats" id="stats">
-    <div class="stat">
-      <div class="stat-icon">👥</div>
-      <div class="stat-value" id="stat-total">0</div>
-      <div class="stat-label">סה"כ הרשמות</div>
-    </div>
-    <div class="stat">
-      <div class="stat-icon">⏳</div>
-      <div class="stat-value" id="stat-new">0</div>
-      <div class="stat-label">חדשות (לטיפול)</div>
-    </div>
-    <div class="stat">
-      <div class="stat-icon">✅</div>
-      <div class="stat-value" id="stat-approved">0</div>
-      <div class="stat-label">אושרו</div>
-    </div>
-    <div class="stat">
-      <div class="stat-icon">💰</div>
-      <div class="stat-value" id="stat-paid">0</div>
-      <div class="stat-label">שילמו</div>
-    </div>
-    <div class="stat">
-      <div class="stat-icon">❌</div>
-      <div class="stat-value" id="stat-cancelled">0</div>
-      <div class="stat-label">ביטלו</div>
-    </div>
-    <div class="stat">
-      <div class="stat-icon">🧒</div>
-      <div class="stat-value" id="stat-kids">0</div>
-      <div class="stat-label">סה"כ ילדים</div>
-    </div>
+  
+  <div class="stats">
+    <div class="stat-card"><div class="stat-num" id="totalReg">0</div><div class="stat-label">סה"כ הרשמות</div></div>
+    <div class="stat-card"><div class="stat-num" id="totalKids">0</div><div class="stat-label">סה"כ ילדים</div></div>
+    <div class="stat-card"><div class="stat-num" id="newCount">0</div><div class="stat-label">חדשים</div></div>
+    <div class="stat-card"><div class="stat-num" id="paidCount">0</div><div class="stat-label">שילמו</div></div>
   </div>
-
-  <!-- Toolbar -->
-  <div class="toolbar">
-    <input type="text" class="search" id="search" placeholder="🔍 חיפוש לפי שם, טלפון, אימייל..." oninput="renderTable()">
-    <select class="filter-select" id="status-filter" onchange="renderTable()">
-      <option value="">כל הסטטוסים</option>
-      <option value="חדש">חדש</option>
-      <option value="אושר">אושר</option>
-      <option value="שולם">שולם</option>
-      <option value="ביטל">ביטל</option>
-    </select>
+  
+  <div class="actions">
+    <button class="btn btn-refresh" onclick="loadRegs()">🔄 רענון</button>
+    <button class="btn btn-csv" onclick="exportCSV()">📥 ייצוא Excel</button>
   </div>
-
-  <!-- Banners -->
-  <div id="error-banner" class="error-banner hidden"></div>
-  <div id="info-banner" class="info-banner hidden"></div>
-
-  <!-- Loading -->
-  <div id="loading" class="loading">
-    <div class="loading-spinner">⏳</div>
-    <p>טוען נתונים...</p>
-  </div>
-
-  <!-- Table -->
-  <div id="content" class="hidden">
-    <div class="table-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th class="row-num">#</th>
-            <th onclick="sortBy('created_at')">תאריך הרשמה <span class="sort-icon">↕</span></th>
-            <th onclick="sortBy('parent_first_name')">שם הורה <span class="sort-icon">↕</span></th>
-            <th onclick="sortBy('parent_phone')">טלפון <span class="sort-icon">↕</span></th>
-            <th onclick="sortBy('parent_email')">אימייל <span class="sort-icon">↕</span></th>
-            <th>ילדים</th>
-            <th onclick="sortBy('start_date')">תאריכים <span class="sort-icon">↕</span></th>
-            <th onclick="sortBy('status')">סטטוס <span class="sort-icon">↕</span></th>
-            <th>פעולות</th>
-          </tr>
-        </thead>
-        <tbody id="tbody"></tbody>
-      </table>
-    </div>
-    <div id="empty" class="empty hidden">
-      <div class="empty-icon">📭</div>
-      <h3>עדיין אין הרשמות</h3>
-      <p>כשהורים יירשמו דרך האתר, ההרשמות יופיעו כאן אוטומטית.</p>
-    </div>
-  </div>
+  
+  <div class="reg-list" id="regList"></div>
 </div>
 
-<!-- Edit Modal -->
-<div class="modal-overlay" id="edit-modal" onclick="if(event.target===this)closeModal()">
-  <div class="modal">
-    <h2 id="modal-title">עריכת נרשם/ת</h2>
-    <p class="modal-subtitle" id="modal-subtitle"></p>
-
-    <div class="modal-section">
-      <h3>👨‍👩‍👧 פרטי ההורה</h3>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-        <div class="modal-row">
-          <label>שם פרטי</label>
-          <input type="text" id="edit-parent-first">
-        </div>
-        <div class="modal-row">
-          <label>שם משפחה</label>
-          <input type="text" id="edit-parent-last">
-        </div>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-        <div class="modal-row">
-          <label>טלפון</label>
-          <input type="tel" id="edit-phone">
-        </div>
-        <div class="modal-row">
-          <label>אימייל</label>
-          <input type="email" id="edit-email">
-        </div>
-      </div>
-    </div>
-
-    <div class="modal-section">
-      <h3>🧒 ילדים</h3>
-      <div class="modal-row">
-        <label>סיכום ילדים</label>
-        <textarea id="edit-children" rows="2"></textarea>
-        <small style="color:var(--muted);font-size:12px">לדוגמה: שקד (גיל 6, גן חובה) | יואב (גיל 8, כיתה ב)</small>
-      </div>
-    </div>
-
-    <div class="modal-section">
-      <h3>📅 תאריכים</h3>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-        <div class="modal-row">
-          <label>תאריך התחלה</label>
-          <input type="date" id="edit-start">
-        </div>
-        <div class="modal-row">
-          <label>תאריך סיום</label>
-          <input type="date" id="edit-end">
-        </div>
-      </div>
-      <div class="modal-row">
-        <label>ימי היעדרות</label>
-        <input type="text" id="edit-missing">
-      </div>
-    </div>
-
-    <div class="modal-section">
-      <h3>🏥 מידע רפואי</h3>
-      <div class="modal-row">
-        <label>אלרגיות</label>
-        <textarea id="edit-allergies" rows="2"></textarea>
-      </div>
-      <div class="modal-row">
-        <label>הערות מההורה</label>
-        <textarea id="edit-notes" rows="2"></textarea>
-      </div>
-    </div>
-
-    <div class="modal-section" style="background:#fefce8">
-      <h3 style="color:#a16207">📝 הערות פנימיות (לשירי בלבד)</h3>
-      <div class="modal-row">
-        <textarea id="edit-admin-notes" rows="3" placeholder="לדוגמה: התקשרה והבטיחה לשלם ביום שלישי..."></textarea>
-      </div>
-    </div>
-
-    <div class="modal-row">
-      <label>סטטוס</label>
-      <select id="edit-status">
-        <option value="חדש">חדש</option>
-        <option value="אושר">אושר</option>
-        <option value="שולם">שולם</option>
-        <option value="ביטל">ביטל</option>
-      </select>
-    </div>
-
-    <div class="modal-actions">
-      <button class="btn-delete" onclick="deleteRegistration()">🗑️ מחק נרשם</button>
-      <button class="btn-cancel" onclick="closeModal()">ביטול</button>
-      <button class="btn-save" onclick="saveEdit()">💾 שמור שינויים</button>
-    </div>
-  </div>
-</div>
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 
 <script>
-// ===== Configuration =====
-const DASHBOARD_PASSWORD = 'shiri2026';
-const SESSION_KEY = 'shiri_dashboard_authenticated';
-
-// ===== Firebase (מקור הנתונים — נרשמים נשמרים ומופיעים בזמן אמת) =====
 const firebaseConfig = {
-  apiKey: "AIzaSyCM-orSuzfoG_pK2qFUPnuIQRiCXi9pBL4",
-  authDomain: "keytanat-shiri.firebaseapp.com",
-  databaseURL: "https://keytanat-shiri-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "keytanat-shiri",
-  storageBucket: "keytanat-shiri.firebasestorage.app",
-  messagingSenderId: "936210340060",
-  appId: "1:936210340060:web:970a35ec0b72040e017c19"
-};
+      apiKey: "AIzaSyCM-orSuzfoG_pK2qFUPnuIQRiCXi9pBL4",
+      authDomain: "keytanat-shiri.firebaseapp.com",
+      databaseURL: "https://keytanat-shiri-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "keytanat-shiri",
+      messagingSenderId: "936210340060",
+      appId: "1:936210340060:web:970a35ec0b72040e017c19"
+    };
 firebase.initializeApp(firebaseConfig);
-const fbDB = firebase.database();
+const db = firebase.database();
 
-// ===== נרשמים מוטמעים בתוך הדף (ברירת מחדל — עובד גם בלי קבצים חיצוניים) =====
-const EMBEDDED_REGISTRATIONS = [
-  {
-    "id": "seed-001",
-    "created_at": "2026-05-16T18:21:56",
-    "status": "חדש",
-    "parent_first_name": "דקלה",
-    "parent_last_name": "גרינולד",
-    "parent_phone": "0543332743",
-    "parent_email": "dikla.rf@gmail.com",
-    "children_summary": "אוהד גרינולד (גיל 5, גן טרום חובה)",
-    "children": [
-      {
-        "name": "אוהד גרינולד",
-        "age": "5",
-        "gan": "גן טרום חובה"
-      }
-    ],
-    "start_date": "2026-08-11",
-    "end_date": "2026-08-25",
-    "missing_days": "",
-    "allergies": "",
-    "notes": "",
-    "admin_notes": "",
-    "heard_from": "חוזרים",
-    "terms_agreed": "כן"
-  },
-  {
-    "id": "seed-002",
-    "created_at": "2026-05-16T18:23:10",
-    "status": "חדש",
-    "parent_first_name": "אביגל",
-    "parent_last_name": "רובינצ׳יק",
-    "parent_phone": "0543986136",
-    "parent_email": "avigal2506@gmail.com",
-    "children_summary": "דניאל (גיל 5, גן אופירה)",
-    "children": [
-      {
-        "name": "דניאל",
-        "age": "5",
-        "gan": "גן אופירה"
-      }
-    ],
-    "start_date": "2026-08-11",
-    "end_date": "2026-08-23",
-    "missing_days": "24.8 ו25.8",
-    "allergies": "",
-    "notes": "",
-    "admin_notes": "",
-    "heard_from": "חוזרים",
-    "terms_agreed": "כן"
-  },
-  {
-    "id": "seed-003",
-    "created_at": "2026-05-16T18:27:59",
-    "status": "חדש",
-    "parent_first_name": "קרן",
-    "parent_last_name": "שניר",
-    "parent_phone": "0524578246",
-    "parent_email": "kerenzom@gmail.com",
-    "children_summary": "ליה שניר (גיל 4, נחשון)",
-    "children": [
-      {
-        "name": "ליה שניר",
-        "age": "4",
-        "gan": "נחשון"
-      }
-    ],
-    "start_date": "2026-08-11",
-    "end_date": "2026-08-25",
-    "missing_days": "",
-    "allergies": "לא שידוע לנו.. 😁",
-    "notes": "",
-    "admin_notes": "",
-    "heard_from": "חברים",
-    "terms_agreed": "כן"
-  },
-  {
-    "id": "seed-004",
-    "created_at": "2026-05-16T18:25:35",
-    "status": "חדש",
-    "parent_first_name": "נטשה",
-    "parent_last_name": "טל",
-    "parent_phone": "0544429551",
-    "parent_email": "natix91@gmail.com",
-    "children_summary": "ליאם (גיל 5, גם טרום חובה)",
-    "children": [
-      {
-        "name": "ליאם",
-        "age": "5",
-        "gan": "גם טרום חובה"
-      }
-    ],
-    "start_date": "2026-08-11",
-    "end_date": "2026-08-25",
-    "missing_days": "",
-    "allergies": "",
-    "notes": "",
-    "admin_notes": "",
-    "heard_from": "חוזרים",
-    "terms_agreed": "כן"
-  },
-  {
-    "id": "seed-005",
-    "created_at": "2026-05-16T18:27:53",
-    "status": "חדש",
-    "parent_first_name": "אורטל",
-    "parent_last_name": "חייט",
-    "parent_phone": "0544603693",
-    "parent_email": "hayat.ortal@gmail.com",
-    "children_summary": "אלמה מיה חייט (גיל 7, כיתה א׳) | יונתן לני חייט (גיל 4, גן נחשון)",
-    "children": [
-      {
-        "name": "אלמה מיה חייט",
-        "age": "7",
-        "gan": "כיתה א׳"
-      },
-      {
-        "name": "יונתן לני חייט",
-        "age": "4",
-        "gan": "גן נחשון"
-      }
-    ],
-    "start_date": "2026-08-16",
-    "end_date": "2026-08-25",
-    "missing_days": "11.08, 12.08, 13.08",
-    "allergies": "אין",
-    "notes": "",
-    "admin_notes": "",
-    "heard_from": "חברים",
-    "terms_agreed": "כן"
-  },
-  {
-    "id": "seed-006",
-    "created_at": "2026-05-16T18:28:11",
-    "status": "חדש",
-    "parent_first_name": "אופק",
-    "parent_last_name": "דהאן",
-    "parent_phone": "0545298777",
-    "parent_email": "ofekesem@gmail.com",
-    "children_summary": "ארבל (גיל 7, א)",
-    "children": [
-      {
-        "name": "ארבל",
-        "age": "7",
-        "gan": "א"
-      }
-    ],
-    "start_date": "2026-08-11",
-    "end_date": "2026-08-28",
-    "missing_days": "",
-    "allergies": "",
-    "notes": "",
-    "admin_notes": "",
-    "heard_from": "חוזרים",
-    "terms_agreed": "כן"
-  },
-  {
-    "id": "seed-007",
-    "created_at": "2026-05-16T18:28:48",
-    "status": "חדש",
-    "parent_first_name": "רעיה",
-    "parent_last_name": "זבולון",
-    "parent_phone": "0549770867",
-    "parent_email": "raya8950@gmail.com",
-    "children_summary": "אלמוג זבולון (גיל 6, גן חובה)",
-    "children": [
-      {
-        "name": "אלמוג זבולון",
-        "age": "6",
-        "gan": "גן חובה"
-      }
-    ],
-    "start_date": "2026-08-11",
-    "end_date": "2026-08-25",
-    "missing_days": "",
-    "allergies": "",
-    "notes": "",
-    "admin_notes": "",
-    "heard_from": "אחר",
-    "terms_agreed": "כן"
-  },
-  {
-    "id": "seed-008",
-    "created_at": "2026-05-16T18:28:50",
-    "status": "חדש",
-    "parent_first_name": "דינה",
-    "parent_last_name": "שפירו",
-    "parent_phone": "0528558755",
-    "parent_email": "dinka1979@gmail.com",
-    "children_summary": "ירדן פרלמן (גיל 5, גן חובה)",
-    "children": [
-      {
-        "name": "ירדן פרלמן",
-        "age": "5",
-        "gan": "גן חובה"
-      }
-    ],
-    "start_date": "2026-08-11",
-    "end_date": "2026-08-25",
-    "missing_days": "",
-    "allergies": "",
-    "notes": "",
-    "admin_notes": "",
-    "heard_from": "חוזרים",
-    "terms_agreed": "כן"
-  },
-  {
-    "id": "seed-009",
-    "created_at": "2026-05-16T18:29:58",
-    "status": "חדש",
-    "parent_first_name": "נטליה",
-    "parent_last_name": "יפרח",
-    "parent_phone": "0526358834",
-    "parent_email": "natalis1504@gmail.com",
-    "children_summary": "עמית יפרח (גיל 3, טרום טרום חובה)",
-    "children": [
-      {
-        "name": "עמית יפרח",
-        "age": "3",
-        "gan": "טרום טרום חובה"
-      }
-    ],
-    "start_date": "2026-08-11",
-    "end_date": "2026-08-25",
-    "missing_days": "",
-    "allergies": "",
-    "notes": "לא אוהב דברים לבנים כי פעם הייתה רגישות לחלב",
-    "admin_notes": "",
-    "heard_from": "חוזרים",
-    "terms_agreed": "כן"
-  },
-  {
-    "id": "seed-010",
-    "created_at": "2026-05-16T18:30:40",
-    "status": "חדש",
-    "parent_first_name": "דנה",
-    "parent_last_name": "סקול אוחנה",
-    "parent_phone": "0523723908",
-    "parent_email": "dsakol@gmail.com",
-    "children_summary": "אריאל אוחנה (גיל 6, כיתה א)",
-    "children": [
-      {
-        "name": "אריאל אוחנה",
-        "age": "6",
-        "gan": "כיתה א"
-      }
-    ],
-    "start_date": "2026-08-11",
-    "end_date": "2026-08-25",
-    "missing_days": "",
-    "allergies": "",
-    "notes": "",
-    "admin_notes": "",
-    "heard_from": "חוזרים",
-    "terms_agreed": "כן"
-  },
-  {
-    "id": "seed-011",
-    "created_at": "2026-05-16T18:31:06",
-    "status": "חדש",
-    "parent_first_name": "נופר",
-    "parent_last_name": "בטנוב",
-    "parent_phone": "0503855863",
-    "parent_email": "nofar23on@gmail.com",
-    "children_summary": "ניל (גיל 4, גן טרום חובה)",
-    "children": [
-      {
-        "name": "ניל",
-        "age": "4",
-        "gan": "גן טרום חובה"
-      }
-    ],
-    "start_date": "2026-08-11",
-    "end_date": "2026-08-20",
-    "missing_days": "",
-    "allergies": "",
-    "notes": "",
-    "admin_notes": "",
-    "heard_from": "חברים",
-    "terms_agreed": "כן"
-  },
-  {
-    "id": "seed-012",
-    "created_at": "2026-05-16T18:32:58",
-    "status": "חדש",
-    "parent_first_name": "מעיין",
-    "parent_last_name": "פוקס",
-    "parent_phone": "0526993282",
-    "parent_email": "mzohar07@gmail.com",
-    "children_summary": "תומר (גיל 7, כיתה א)",
-    "children": [
-      {
-        "name": "תומר",
-        "age": "7",
-        "gan": "כיתה א"
-      }
-    ],
-    "start_date": "2026-08-11",
-    "end_date": "2026-08-25",
-    "missing_days": "",
-    "allergies": "",
-    "notes": "",
-    "admin_notes": "",
-    "heard_from": "חוזרים",
-    "terms_agreed": "כן"
-  },
-  {
-    "id": "seed-013",
-    "created_at": "2026-05-16T18:33:05",
-    "status": "חדש",
-    "parent_first_name": "אייל",
-    "parent_last_name": "סבן",
-    "parent_phone": "0504633383",
-    "parent_email": "eyals111@gmail.com",
-    "children_summary": "רומי (גיל 6, גן חובה)",
-    "children": [
-      {
-        "name": "רומי",
-        "age": "6",
-        "gan": "גן חובה"
-      }
-    ],
-    "start_date": "2026-08-11",
-    "end_date": "2026-05-25",
-    "missing_days": "",
-    "allergies": "",
-    "notes": "",
-    "admin_notes": "",
-    "heard_from": "אחר",
-    "terms_agreed": "כן"
-  },
-  {
-    "id": "seed-014",
-    "created_at": "2026-05-16T18:33:20",
-    "status": "חדש",
-    "parent_first_name": "אלכסנדרה",
-    "parent_last_name": "מדבדובסקי",
-    "parent_phone": "0585605437",
-    "parent_email": "alexamedvedovskaya@gmail.com",
-    "children_summary": "מיכאל (גיל 5, נחשון)",
-    "children": [
-      {
-        "name": "מיכאל",
-        "age": "5",
-        "gan": "נחשון"
-      }
-    ],
-    "start_date": "2026-08-11",
-    "end_date": "2026-08-25",
-    "missing_days": "",
-    "allergies": "אין",
-    "notes": "",
-    "admin_notes": "",
-    "heard_from": "חוזרים",
-    "terms_agreed": "כן"
-  },
-  {
-    "id": "seed-015",
-    "created_at": "2026-05-16T18:40:41",
-    "status": "חדש",
-    "parent_first_name": "מריאנה",
-    "parent_last_name": "דימנשטיין",
-    "parent_phone": "0523979880",
-    "parent_email": "mariana.shpitz@gmail.com",
-    "children_summary": "דר (גיל 7, א)",
-    "children": [
-      {
-        "name": "דר",
-        "age": "7",
-        "gan": "א"
-      }
-    ],
-    "start_date": "2026-08-11",
-    "end_date": "2026-08-19",
-    "missing_days": "",
-    "allergies": "",
-    "notes": "",
-    "admin_notes": "",
-    "heard_from": "",
-    "terms_agreed": "כן"
-  },
-  {
-    "id": "seed-016",
-    "created_at": "2026-05-16T18:45:51",
-    "status": "חדש",
-    "parent_first_name": "קטי",
-    "parent_last_name": "חיימן",
-    "parent_phone": "0547571667",
-    "parent_email": "bennerkatherine@gmail.com",
-    "children_summary": "לילי רוז חיימן (גיל 5, גן חובה)",
-    "children": [
-      {
-        "name": "לילי רוז חיימן",
-        "age": "5",
-        "gan": "גן חובה"
-      }
-    ],
-    "start_date": "2026-08-11",
-    "end_date": "2026-08-25",
-    "missing_days": "",
-    "allergies": "",
-    "notes": "",
-    "admin_notes": "",
-    "heard_from": "חוזרים",
-    "terms_agreed": "כן"
-  },
-  {
-    "id": "seed-017",
-    "created_at": "2026-05-16T18:46:50",
-    "status": "חדש",
-    "parent_first_name": "מיטל",
-    "parent_last_name": "מלכה",
-    "parent_phone": "0526406474",
-    "parent_email": "meytal8752@gmail.com",
-    "children_summary": "אלמה אור  (גיל 5, גן חובה) | איימי אור  (גיל 3, טרום טרום חובה )",
-    "children": [
-      {
-        "name": "אלמה אור",
-        "age": "5",
-        "gan": "גן חובה"
-      },
-      {
-        "name": "איימי אור",
-        "age": "3",
-        "gan": "טרום טרום חובה"
-      }
-    ],
-    "start_date": "2026-08-11",
-    "end_date": "2026-08-25",
-    "missing_days": "",
-    "allergies": "אלמה - אלרגיה לפיסטוק וקשיו , אסור גם עלול להכיל",
-    "notes": "",
-    "admin_notes": "",
-    "heard_from": "חברים",
-    "terms_agreed": "כן"
-  },
-  {
-    "id": "seed-018",
-    "created_at": "2026-05-16T18:49:10",
-    "status": "חדש",
-    "parent_first_name": "ענת",
-    "parent_last_name": "אסולין שטרית",
-    "parent_phone": "0528393331",
-    "parent_email": "nattyas0808@gmail.com",
-    "children_summary": "עומר (גיל 6, חובה)",
-    "children": [
-      {
-        "name": "עומר",
-        "age": "6",
-        "gan": "חובה"
-      }
-    ],
-    "start_date": "2026-08-11",
-    "end_date": "2026-05-25",
-    "missing_days": "",
-    "allergies": "",
-    "notes": "",
-    "admin_notes": "",
-    "heard_from": "חוזרים",
-    "terms_agreed": "כן"
-  },
-  {
-    "id": "seed-019",
-    "created_at": "2026-05-16T18:53:27",
-    "status": "חדש",
-    "parent_first_name": "דניאל",
-    "parent_last_name": "לוין",
-    "parent_phone": "0528220936",
-    "parent_email": "daniellelevi6@gmail.com",
-    "children_summary": "יעל לוין (גיל 6, תמר) | יהב לוין (גיל 5, שיטה)",
-    "children": [
-      {
-        "name": "יעל לוין",
-        "age": "6",
-        "gan": "תמר"
-      },
-      {
-        "name": "יהב לוין",
-        "age": "5",
-        "gan": "שיטה"
-      }
-    ],
-    "start_date": "2026-08-11",
-    "end_date": "2026-08-25",
-    "missing_days": "",
-    "allergies": "",
-    "notes": "",
-    "admin_notes": "",
-    "heard_from": "אחר",
-    "terms_agreed": "כן"
-  },
-  {
-    "id": "seed-020",
-    "created_at": "2026-05-16T18:55:30",
-    "status": "חדש",
-    "parent_first_name": "שרית",
-    "parent_last_name": "ברנשטיין",
-    "parent_phone": "0506874760",
-    "parent_email": "saritbernstein@gmail.com",
-    "children_summary": "ניב (גיל 6, גן חובה)",
-    "children": [
-      {
-        "name": "ניב",
-        "age": "6",
-        "gan": "גן חובה"
-      }
-    ],
-    "start_date": "2026-08-11",
-    "end_date": "2026-08-25",
-    "missing_days": "",
-    "allergies": "",
-    "notes": "",
-    "admin_notes": "",
-    "heard_from": "חוזרים",
-    "terms_agreed": "כן"
-  },
-  {
-    "id": "seed-021",
-    "created_at": "2026-05-16T19:00:04",
-    "status": "חדש",
-    "parent_first_name": "רעות",
-    "parent_last_name": "גנון מירוצניק",
-    "parent_phone": "0527733318",
-    "parent_email": "reutganon@gmail.com",
-    "children_summary": "ליאן (גיל 5, נחשון)",
-    "children": [
-      {
-        "name": "ליאן",
-        "age": "5",
-        "gan": "נחשון"
-      }
-    ],
-    "start_date": "2026-08-16",
-    "end_date": "2026-08-25",
-    "missing_days": "",
-    "allergies": "",
-    "notes": "",
-    "admin_notes": "",
-    "heard_from": "חוזרים",
-    "terms_agreed": "כן"
-  },
-  {
-    "id": "seed-022",
-    "created_at": "2026-05-16T19:02:54",
-    "status": "חדש",
-    "parent_first_name": "טניה",
-    "parent_last_name": "חייטוב",
-    "parent_phone": "0525466320",
-    "parent_email": "tanya.danilov@gmail.com",
-    "children_summary": "לאון (גיל 5, גן חובה תמר)",
-    "children": [
-      {
-        "name": "לאון",
-        "age": "5",
-        "gan": "גן חובה תמר"
-      }
-    ],
-    "start_date": "2026-08-11",
-    "end_date": "2026-08-25",
-    "missing_days": "",
-    "allergies": "",
-    "notes": "",
-    "admin_notes": "",
-    "heard_from": "חוזרים",
-    "terms_agreed": "כן"
-  },
-  {
-    "id": "seed-023",
-    "created_at": "2026-05-16T19:16:26",
-    "status": "חדש",
-    "parent_first_name": "רומי",
-    "parent_last_name": "סבן",
-    "parent_phone": "0506306380",
-    "parent_email": "elimuller88@gmaul.com",
-    "children_summary": "רומי סבן (גיל 6, תמר)",
-    "children": [
-      {
-        "name": "רומי סבן",
-        "age": "6",
-        "gan": "תמר"
-      }
-    ],
-    "start_date": "2026-08-11",
-    "end_date": "2026-08-25",
-    "missing_days": "",
-    "allergies": "",
-    "notes": "",
-    "admin_notes": "",
-    "heard_from": "חוזרים",
-    "terms_agreed": "כן"
-  },
-  {
-    "id": "seed-024",
-    "created_at": "2026-05-16T19:19:35",
-    "status": "חדש",
-    "parent_first_name": "אלכסנדר",
-    "parent_last_name": "משצריאקוב",
-    "parent_phone": "0548033108",
-    "parent_email": "a0548033108@gmail.com",
-    "children_summary": "ליאור (גיל 5, גן)",
-    "children": [
-      {
-        "name": "ליאור",
-        "age": "5",
-        "gan": "גן"
-      }
-    ],
-    "start_date": "2026-08-11",
-    "end_date": "2026-08-25",
-    "missing_days": "",
-    "allergies": "",
-    "notes": "",
-    "admin_notes": "",
-    "heard_from": "חוזרים",
-    "terms_agreed": "כן"
-  },
-  {
-    "id": "seed-025",
-    "created_at": "2026-05-16T19:23:21",
-    "status": "חדש",
-    "parent_first_name": "סיון",
-    "parent_last_name": "אוליאל",
-    "parent_phone": "0546092621",
-    "parent_email": "sivan.uliel@gmail.com",
-    "children_summary": "ליעד (גיל 4, טרום טרום חובה)",
-    "children": [
-      {
-        "name": "ליעד",
-        "age": "4",
-        "gan": "טרום טרום חובה"
-      }
-    ],
-    "start_date": "2026-08-11",
-    "end_date": "2026-05-25",
-    "missing_days": "",
-    "allergies": "",
-    "notes": "",
-    "admin_notes": "",
-    "heard_from": "חוזרים",
-    "terms_agreed": "כן"
-  },
-  {
-    "id": "seed-026",
-    "created_at": "2026-05-16T19:48:58",
-    "status": "חדש",
-    "parent_first_name": "ליזה",
-    "parent_last_name": "לוי",
-    "parent_phone": "0525400271",
-    "parent_email": "elizabethlevy92@gmail.com",
-    "children_summary": "ליבר לוי (גיל 6, גן חובה ) | ארבל לוי (גיל 4, גן טרום חובה )",
-    "children": [
-      {
-        "name": "ליבר לוי",
-        "age": "6",
-        "gan": "גן חובה"
-      },
-      {
-        "name": "ארבל לוי",
-        "age": "4",
-        "gan": "גן טרום חובה"
-      }
-    ],
-    "start_date": "2026-08-11",
-    "end_date": "2026-05-25",
-    "missing_days": "",
-    "allergies": "ללא",
-    "notes": "",
-    "admin_notes": "",
-    "heard_from": "חברים",
-    "terms_agreed": "כן"
-  },
-  {
-    "id": "seed-027",
-    "created_at": "2026-05-16T19:51:42",
-    "status": "חדש",
-    "parent_first_name": "חן",
-    "parent_last_name": "מזרחי",
-    "parent_phone": "0523253656",
-    "parent_email": "chenzac38@gmail.com",
-    "children_summary": "אדל מזרחי (גיל 3, מעון- עולה לגן ערייה)",
-    "children": [
-      {
-        "name": "אדל מזרחי",
-        "age": "3",
-        "gan": "מעון- עולה לגן ערייה"
-      }
-    ],
-    "start_date": "2026-08-11",
-    "end_date": "2026-08-25",
-    "missing_days": "",
-    "allergies": "",
-    "notes": "",
-    "admin_notes": "",
-    "heard_from": "חברים",
-    "terms_agreed": "כן"
-  },
-  {
-    "id": "seed-028",
-    "created_at": "2026-05-16T19:56:57",
-    "status": "חדש",
-    "parent_first_name": "בתיה",
-    "parent_last_name": "כהן",
-    "parent_phone": "0522266708",
-    "parent_email": "batel1322@gmail.com",
-    "children_summary": "ירין כהן (גיל 4, גן טרום טרום חובה )גן חרוב()",
-    "children": [
-      {
-        "name": "ירין כהן",
-        "age": "4",
-        "gan": "גן טרום טרום חובה )גן חרוב("
-      }
-    ],
-    "start_date": "2026-08-11",
-    "end_date": "2026-05-25",
-    "missing_days": "",
-    "allergies": "אלרגיה לפול g6pd",
-    "notes": "",
-    "admin_notes": "",
-    "heard_from": "חוזרים",
-    "terms_agreed": "כן"
-  },
-  {
-    "id": "seed-029",
-    "created_at": "2026-05-16T20:29:22",
-    "status": "חדש",
-    "parent_first_name": "דניאל",
-    "parent_last_name": "בלגולה",
-    "parent_phone": "0546896656",
-    "parent_email": "Danipril@gmail.com",
-    "children_summary": "אדם (גיל 6, חובה) | יונתן (גיל 4, טרום חובה)",
-    "children": [
-      {
-        "name": "אדם",
-        "age": "6",
-        "gan": "חובה"
-      },
-      {
-        "name": "יונתן",
-        "age": "4",
-        "gan": "טרום חובה"
-      }
-    ],
-    "start_date": "2026-08-11",
-    "end_date": "2026-08-25",
-    "missing_days": "",
-    "allergies": "יונתן - אסטמה",
-    "notes": "",
-    "admin_notes": "",
-    "heard_from": "חוזרים",
-    "terms_agreed": "כן"
-  },
-  {
-    "id": "seed-030",
-    "created_at": "2026-05-16T20:29:34",
-    "status": "חדש",
-    "parent_first_name": "אורטל",
-    "parent_last_name": "סבג",
-    "parent_phone": "0527219997",
-    "parent_email": "optonway@gmail.com",
-    "children_summary": "אריאל (גיל 6, כיתה א)",
-    "children": [
-      {
-        "name": "אריאל",
-        "age": "6",
-        "gan": "כיתה א"
-      }
-    ],
-    "start_date": "2026-08-10",
-    "end_date": "2026-05-18",
-    "missing_days": "",
-    "allergies": "",
-    "notes": "",
-    "admin_notes": "",
-    "heard_from": "חוזרים",
-    "terms_agreed": "כן"
-  },
-  {
-    "id": "seed-031",
-    "created_at": "2026-05-16T20:45:09",
-    "status": "חדש",
-    "parent_first_name": "ענבל",
-    "parent_last_name": "כהן",
-    "parent_phone": "0524455648",
-    "parent_email": "inbalhirsh@gmail.com",
-    "children_summary": "עמית כהן (גיל 6, גן חובה)",
-    "children": [
-      {
-        "name": "עמית כהן",
-        "age": "6",
-        "gan": "גן חובה"
-      }
-    ],
-    "start_date": "2026-08-11",
-    "end_date": "2026-05-25",
-    "missing_days": "",
-    "allergies": "",
-    "notes": "",
-    "admin_notes": "",
-    "heard_from": "חוזרים",
-    "terms_agreed": "כן"
-  },
-  {
-    "id": "seed-032",
-    "created_at": "2026-05-16T20:55:07",
-    "status": "חדש",
-    "parent_first_name": "ויקי",
-    "parent_last_name": "בלוך",
-    "parent_phone": "0509442667",
-    "parent_email": "vicka.shay@gmail.com",
-    "children_summary": "תמר (גיל 5, גן תמר)",
-    "children": [
-      {
-        "name": "תמר",
-        "age": "5",
-        "gan": "גן תמר"
-      }
-    ],
-    "start_date": "2026-08-11",
-    "end_date": "2026-08-25",
-    "missing_days": "",
-    "allergies": "אין",
-    "notes": "",
-    "admin_notes": "",
-    "heard_from": "אחר",
-    "terms_agreed": "כן"
-  },
-  {
-    "id": "seed-033",
-    "created_at": "2026-05-16T21:44:59",
-    "status": "חדש",
-    "parent_first_name": "אפרת",
-    "parent_last_name": "צרפתי",
-    "parent_phone": "0546207014",
-    "parent_email": "efratz@kkl.org.il",
-    "children_summary": "יהלי צרפתי (גיל 6, גן חובה)",
-    "children": [
-      {
-        "name": "יהלי צרפתי",
-        "age": "6",
-        "gan": "גן חובה"
-      }
-    ],
-    "start_date": "2026-08-11",
-    "end_date": "2026-08-20",
-    "missing_days": "",
-    "allergies": "",
-    "notes": "",
-    "admin_notes": "",
-    "heard_from": "חוזרים",
-    "terms_agreed": "כן"
-  },
-  {
-    "id": "seed-034",
-    "created_at": "2026-05-16T21:48:09",
-    "status": "חדש",
-    "parent_first_name": "יסמין",
-    "parent_last_name": "לוי",
-    "parent_phone": "0545501682",
-    "parent_email": "er.yas19@gmail.com",
-    "children_summary": "אביתר לוי (גיל 3, גן טט״ח) | איתן לוי (גיל 5, גן טרום חובה)",
-    "children": [
-      {
-        "name": "אביתר לוי",
-        "age": "3",
-        "gan": "גן טט״ח"
-      },
-      {
-        "name": "איתן לוי",
-        "age": "5",
-        "gan": "גן טרום חובה"
-      }
-    ],
-    "start_date": "2026-08-11",
-    "end_date": "2026-08-25",
-    "missing_days": "",
-    "allergies": "",
-    "notes": "",
-    "admin_notes": "",
-    "heard_from": "חברים",
-    "terms_agreed": "כן"
-  }
-];
+let currentData = {};
 
-
-let allRegistrations = [];
-let sortKey = 'created_at';
-let sortDir = 'desc';
-let currentEditId = null;
-
-// ===== Login =====
-function login(e) {
-  e.preventDefault();
-  const password = document.getElementById('password-input').value;
-  const errorEl = document.getElementById('login-error');
-
-  if (password === DASHBOARD_PASSWORD) {
-    sessionStorage.setItem(SESSION_KEY, 'true');
-    document.getElementById('login-screen').classList.add('hidden');
-    document.getElementById('dashboard').classList.remove('hidden');
-    loadData();
+function doLogin() {
+  const pwd = document.getElementById('pwd').value;
+  if (pwd === 'shiri2026') {
+    document.getElementById('loginBox').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    loadRegs();
   } else {
-    errorEl.classList.add('show');
-    document.getElementById('password-input').value = '';
-    setTimeout(() => errorEl.classList.remove('show'), 3000);
-  }
-  return false;
-}
-
-function logout() {
-  if (!confirm('האם להתנתק מהדשבורד?')) return;
-  sessionStorage.removeItem(SESSION_KEY);
-  location.reload();
-}
-
-function checkAuth() {
-  if (sessionStorage.getItem(SESSION_KEY) === 'true') {
-    document.getElementById('login-screen').classList.add('hidden');
-    document.getElementById('dashboard').classList.remove('hidden');
-    loadData();
+    alert('סיסמה שגויה');
   }
 }
 
-// ===== Data Loading =====
-// טוען פעם אחת את 34 הקיימים ל-Firebase (אם עוד לא נטענו), ואז מאזין בזמן אמת
-async function ensureSeeded() {
-  const flag = await fbDB.ref('meta/seeded').once('value');
-  if (!flag.val()) {
-    const updates = {};
-    EMBEDDED_REGISTRATIONS.forEach(function(r) { updates['registrations/' + r.id] = r; });
-    updates['meta/seeded'] = true;
-    await fbDB.ref().update(updates);
-  }
-}
-
-let fbListenerAttached = false;
-
-async function loadData() {
-  hideMessages();
-  document.getElementById('loading').classList.remove('hidden');
-  document.getElementById('content').classList.add('hidden');
-
-  try {
-    await ensureSeeded();
-
-    // מאזין חי: כל שינוי ב-Firebase (הרשמה חדשה / עריכה / מחיקה) מתעדכן כאן מיד
-    if (!fbListenerAttached) {
-      fbListenerAttached = true;
-      fbDB.ref('registrations').on('value', function(snap) {
-        const val = snap.val() || {};
-        allRegistrations = Object.keys(val).map(function(k) { return val[k]; });
-        allRegistrations.sort(function(a, b) {
-          return new Date(a.created_at || 0) - new Date(b.created_at || 0);
-        });
-        renderTable();
-        updateStats();
-        document.getElementById('loading').classList.add('hidden');
-        document.getElementById('content').classList.remove('hidden');
-        if (allRegistrations.length === 0) {
-          showInfo('💡 אין כרגע נרשמים להצגה.');
-        }
-      }, function(err) {
-        // שגיאת חיבור — נציג את הנרשמים המוטמעים כגיבוי
-        allRegistrations = JSON.parse(JSON.stringify(EMBEDDED_REGISTRATIONS));
-        renderTable();
-        updateStats();
-        document.getElementById('loading').classList.add('hidden');
-        document.getElementById('content').classList.remove('hidden');
-        showError('שגיאת חיבור ל-Firebase — מוצגים הנרשמים השמורים. ' + (err && err.message ? err.message : ''));
-      });
-    }
-  } catch (err) {
-    // נפילה מלאה — גיבוי לנרשמים המוטמעים
-    allRegistrations = JSON.parse(JSON.stringify(EMBEDDED_REGISTRATIONS));
-    renderTable();
-    updateStats();
-    document.getElementById('loading').classList.add('hidden');
-    document.getElementById('content').classList.remove('hidden');
-    showError('שגיאה בטעינה: ' + err.message);
-  }
-}
-
-// גיבוי ידני (לא חובה) — מוריד עותק JSON של הנתונים הנוכחיים
-function downloadJSON() {
-  const blob = new Blob([JSON.stringify({ registrations: allRegistrations }, null, 2)], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'registrations-backup.json';
-  a.click();
-  URL.revokeObjectURL(url);
-}
-
-// כתיבה/מחיקה ישירות ל-Firebase — המאזין החי מרענן את התצוגה אוטומטית
-async function fbWriteRecord(record) {
-  await fbDB.ref('registrations/' + record.id).set(record);
-}
-async function fbDeleteRecord(id) {
-  await fbDB.ref('registrations/' + id).remove();
-}
-
-// ===== Rendering =====
-function renderTable() {
-  const search = document.getElementById('search').value.trim().toLowerCase();
-  const statusFilter = document.getElementById('status-filter').value;
-
-  let filtered = [...allRegistrations];
-
-  if (statusFilter) {
-    filtered = filtered.filter(r => (r.status || 'חדש') === statusFilter);
-  }
-
-  if (search) {
-    filtered = filtered.filter(r =>
-      Object.values(r).some(v => {
-        if (typeof v === 'string') return v.toLowerCase().includes(search);
-        if (Array.isArray(v)) return JSON.stringify(v).toLowerCase().includes(search);
-        return false;
-      })
-    );
-  }
-
-  filtered.sort((a, b) => {
-    let av = a[sortKey], bv = b[sortKey];
-    if (sortKey === 'created_at' || sortKey === 'start_date') {
-      av = new Date(av || 0).getTime();
-      bv = new Date(bv || 0).getTime();
-    } else {
-      av = String(av || '').toLowerCase();
-      bv = String(bv || '').toLowerCase();
-    }
-    if (av < bv) return sortDir === 'asc' ? -1 : 1;
-    if (av > bv) return sortDir === 'asc' ? 1 : -1;
-    return 0;
+function loadRegs() {
+  db.ref('registrations').on('value', function(snap){
+    currentData = snap.val() || {};
+    renderRegs();
   });
+}
 
-  const tbody = document.getElementById('tbody');
-  const empty = document.getElementById('empty');
-
-  if (filtered.length === 0) {
-    tbody.innerHTML = '';
-    empty.classList.remove('hidden');
-    if (allRegistrations.length === 0) {
-      empty.innerHTML = '<div class="empty-icon">📭</div><h3>עדיין אין הרשמות</h3><p>כשהורים יירשמו דרך האתר, ההרשמות יופיעו כאן אוטומטית.</p>';
-    } else {
-      empty.innerHTML = '<div class="empty-icon">🔍</div><h3>לא נמצאו תוצאות</h3><p>נסי לחפש משהו אחר או לשנות את הסינון</p>';
-    }
+function renderRegs() {
+  const list = document.getElementById('regList');
+  const entries = Object.entries(currentData);
+  entries.sort(function(a,b){ return (b[1].timestamp||0) - (a[1].timestamp||0); });
+  
+  let totalKids = 0, newCount = 0, paidCount = 0;
+  entries.forEach(function(e){
+    const r = e[1];
+    if (r.children && Array.isArray(r.children)) totalKids += r.children.length;
+    if (r.status === 'new' || !r.status) newCount++;
+    if (r.status === 'paid') paidCount++;
+  });
+  
+  document.getElementById('totalReg').textContent = entries.length;
+  document.getElementById('totalKids').textContent = totalKids;
+  document.getElementById('newCount').textContent = newCount;
+  document.getElementById('paidCount').textContent = paidCount;
+  
+  if (entries.length === 0) {
+    list.innerHTML = '<div class="empty">אין הרשמות עדיין</div>';
     return;
   }
-
-  empty.classList.add('hidden');
-  tbody.innerHTML = filtered.map((r, idx) => {
-    const created = r.created_at ? new Date(r.created_at).toLocaleString('he-IL', {
-      day: '2-digit', month: '2-digit', year: '2-digit',
-      hour: '2-digit', minute: '2-digit'
-    }) : '-';
-    const fullName = (r.parent_first_name || '') + ' ' + (r.parent_last_name || '');
-    const phoneClean = String(r.parent_phone || '').replace(/[^\d+]/g, '');
-    const phoneLink = r.parent_phone ? `<a href="tel:${phoneClean}" class="phone-link">${escape(r.parent_phone)}</a>` : '-';
-    const emailLink = r.parent_email ? `<a href="mailto:${escapeAttr(r.parent_email)}" class="email-link">${escape(r.parent_email)}</a>` : '-';
-    const children = r.children_summary || '-';
-    const dates = (r.start_date || r.end_date)
-      ? formatDate(r.start_date) + ' - ' + formatDate(r.end_date)
-      : '-';
-    const status = r.status || 'חדש';
-
-    return `<tr>
-      <td class="row-num">${idx + 1}</td>
-      <td class="date-cell">${created}</td>
-      <td class="name-cell">${escape(fullName.trim() || '-')}</td>
-      <td>${phoneLink}</td>
-      <td>${emailLink}</td>
-      <td style="font-size:13px;max-width:200px">${escape(children)}</td>
-      <td class="date-cell">${dates}</td>
-      <td>
-        <span class="status-badge status-${status}" onclick="quickStatus('${r.id}')" title="לחצי לשינוי סטטוס">
-          ${status}
-        </span>
-      </td>
-      <td class="actions-cell">
-        <button class="action-btn" onclick="openEdit('${r.id}')" title="ערוך">✏️</button>
-        <button class="action-btn delete" onclick="confirmDelete('${r.id}')" title="מחק">🗑️</button>
-      </td>
-    </tr>`;
+  
+  list.innerHTML = entries.map(function(e){
+    const key = e[0];
+    const r = e[1];
+    const status = r.status || 'new';
+    const statusLabel = {new:'חדש', approved:'אושר', paid:'שילם', cancelled:'בוטל'}[status] || 'חדש';
+    const badgeClass = {new:'badge-new', approved:'badge-approved', paid:'badge-paid', cancelled:'badge-cancelled'}[status] || 'badge-new';
+    const phone = (r.parentPhone||'').replace(/\D/g,'');
+    const waPhone = phone.startsWith('0') ? '972' + phone.substring(1) : phone;
+    
+    let childrenHtml = '';
+    if (r.children && Array.isArray(r.children)) {
+      childrenHtml = r.children.map(function(c){
+        return '<div class="child-item">👶 <strong>' + (c.name||'') + '</strong> • ' + (c.grade||'') + ' • ' + (c.school||'') + '</div>';
+      }).join('');
+    }
+    
+    return '<div class="reg-card status-' + status + '">' +
+      '<div class="reg-header">' +
+        '<div>' +
+          '<div class="reg-parent">👤 ' + (r.parentName||'') + '</div>' +
+          '<div class="reg-date">' + (r.date||'') + '</div>' +
+        '</div>' +
+        '<span class="status-badge ' + badgeClass + '">' + statusLabel + '</span>' +
+      '</div>' +
+      '<div class="reg-details">' +
+        '<div>📞 ' + (r.parentPhone||'') + '</div>' +
+        (r.parentEmail ? '<div>✉ ' + r.parentEmail + '</div>' : '') +
+        (r.parentAddress ? '<div>🏠 ' + r.parentAddress + '</div>' : '') +
+        childrenHtml +
+        (r.allergies ? '<div style="margin-top:8px;color:#E65100;"><strong>🏥 אלרגיות:</strong> ' + r.allergies + '</div>' : '') +
+        (r.notes ? '<div><strong>הערות:</strong> ' + r.notes + '</div>' : '') +
+      '</div>' +
+      '<div class="reg-actions">' +
+        '<a class="mini-btn mini-btn-call" href="tel:' + phone + '">📞 חייג</a>' +
+        '<a class="mini-btn mini-btn-wa" href="https://wa.me/' + waPhone + '" target="_blank">💬 WhatsApp</a>' +
+        '<button class="mini-btn mini-btn-status" onclick="changeStatus(\''+key+'\')">🔄 סטטוס</button>' +
+        '<button class="mini-btn mini-btn-delete" onclick="deleteReg(\''+key+'\')">🗑 מחק</button>' +
+      '</div>' +
+    '</div>';
   }).join('');
 }
 
-function formatDate(d) {
-  if (!d) return '?';
-  const date = new Date(d);
-  if (isNaN(date)) return d;
-  return date.toLocaleDateString('he-IL', { day: '2-digit', month: '2-digit' });
+function changeStatus(key) {
+  const statuses = ['new','approved','paid','cancelled'];
+  const labels = {new:'חדש', approved:'אושר', paid:'שילם', cancelled:'בוטל'};
+  const current = currentData[key].status || 'new';
+  const idx = statuses.indexOf(current);
+  const next = statuses[(idx+1) % statuses.length];
+  db.ref('registrations/' + key + '/status').set(next);
 }
 
-function sortBy(key) {
-  if (sortKey === key) sortDir = sortDir === 'asc' ? 'desc' : 'asc';
-  else { sortKey = key; sortDir = 'desc'; }
-  renderTable();
+function deleteReg(key) {
+  if (!confirm('למחוק את ההרשמה?')) return;
+  db.ref('registrations/' + key).remove();
 }
 
-function updateStats() {
-  const total = allRegistrations.length;
-  let newCount = 0, approved = 0, paid = 0, cancelled = 0, kids = 0;
-
-  for (const r of allRegistrations) {
-    const s = r.status || 'חדש';
-    if (s === 'חדש') newCount++;
-    else if (s === 'אושר') approved++;
-    else if (s === 'שולם') paid++;
-    else if (s === 'ביטל') cancelled++;
-
-    if (Array.isArray(r.children)) kids += r.children.length;
-  }
-
-  document.getElementById('stat-total').textContent = total;
-  document.getElementById('stat-new').textContent = newCount;
-  document.getElementById('stat-approved').textContent = approved;
-  document.getElementById('stat-paid').textContent = paid;
-  document.getElementById('stat-cancelled').textContent = cancelled;
-  document.getElementById('stat-kids').textContent = kids;
-}
-
-// ===== Status Quick-Change =====
-async function quickStatus(id) {
-  const r = allRegistrations.find(x => x.id === id);
-  if (!r) return;
-  const statuses = ['חדש', 'אושר', 'שולם', 'ביטל'];
-  const current = r.status || 'חדש';
-  const nextIdx = (statuses.indexOf(current) + 1) % statuses.length;
-  r.status = statuses[nextIdx];
-
-  try {
-    await fbWriteRecord(r);
-  } catch (err) {
-    showError('שגיאה בעדכון הסטטוס: ' + (err && err.message ? err.message : err));
-  }
-}
-
-// ===== Modal / Edit =====
-function openEdit(id) {
-  const r = allRegistrations.find(x => x.id === id);
-  if (!r) return;
-  currentEditId = id;
-
-  const fullName = ((r.parent_first_name || '') + ' ' + (r.parent_last_name || '')).trim();
-  document.getElementById('modal-title').textContent = 'עריכת: ' + (fullName || 'נרשם/ת');
-  document.getElementById('modal-subtitle').textContent = 'נרשם/ה ב-' + (r.created_at ? new Date(r.created_at).toLocaleString('he-IL') : '');
-
-  document.getElementById('edit-parent-first').value = r.parent_first_name || '';
-  document.getElementById('edit-parent-last').value = r.parent_last_name || '';
-  document.getElementById('edit-phone').value = r.parent_phone || '';
-  document.getElementById('edit-email').value = r.parent_email || '';
-  document.getElementById('edit-children').value = r.children_summary || '';
-  document.getElementById('edit-start').value = r.start_date || '';
-  document.getElementById('edit-end').value = r.end_date || '';
-  document.getElementById('edit-missing').value = r.missing_days || '';
-  document.getElementById('edit-allergies').value = r.allergies || '';
-  document.getElementById('edit-notes').value = r.notes || '';
-  document.getElementById('edit-admin-notes').value = r.admin_notes || '';
-  document.getElementById('edit-status').value = r.status || 'חדש';
-
-  document.getElementById('edit-modal').classList.add('show');
-}
-
-function closeModal() {
-  document.getElementById('edit-modal').classList.remove('show');
-  currentEditId = null;
-}
-
-async function saveEdit() {
-  if (!currentEditId) return;
-  const r = allRegistrations.find(x => x.id === currentEditId);
-  if (!r) return;
-
-  r.parent_first_name = document.getElementById('edit-parent-first').value;
-  r.parent_last_name = document.getElementById('edit-parent-last').value;
-  r.parent_phone = document.getElementById('edit-phone').value;
-  r.parent_email = document.getElementById('edit-email').value;
-  r.children_summary = document.getElementById('edit-children').value;
-  r.start_date = document.getElementById('edit-start').value;
-  r.end_date = document.getElementById('edit-end').value;
-  r.missing_days = document.getElementById('edit-missing').value;
-  r.allergies = document.getElementById('edit-allergies').value;
-  r.notes = document.getElementById('edit-notes').value;
-  r.admin_notes = document.getElementById('edit-admin-notes').value;
-  r.status = document.getElementById('edit-status').value;
-
-  try {
-    await fbWriteRecord(r);
-    closeModal();
-    showInfo('✅ השינויים נשמרו.');
-    setTimeout(hideMessages, 3000);
-  } catch (err) {
-    showError('שגיאה בשמירה: ' + (err && err.message ? err.message : err));
-  }
-}
-
-async function deleteRegistration() {
-  if (!currentEditId) return;
-  const r = allRegistrations.find(x => x.id === currentEditId);
-  if (!r) return;
-
-  const name = ((r.parent_first_name || '') + ' ' + (r.parent_last_name || '')).trim();
-  if (!confirm('האם למחוק לצמיתות את ההרשמה של "' + (name || 'נרשם זה') + '"?\n\nפעולה זו לא ניתנת לביטול.')) return;
-
-  try {
-    await fbDeleteRecord(currentEditId);
-    closeModal();
-    showInfo('🗑️ ההרשמה נמחקה.');
-    setTimeout(hideMessages, 3000);
-  } catch (err) {
-    showError('שגיאה במחיקה: ' + (err && err.message ? err.message : err));
-  }
-}
-
-async function confirmDelete(id) {
-  const r = allRegistrations.find(x => x.id === id);
-  if (!r) return;
-  const name = ((r.parent_first_name || '') + ' ' + (r.parent_last_name || '')).trim();
-  if (!confirm('האם למחוק לצמיתות את ההרשמה של "' + (name || 'נרשם זה') + '"?\n\nפעולה זו לא ניתנת לביטול.')) return;
-
-  try {
-    await fbDeleteRecord(id);
-    showInfo('🗑️ ההרשמה נמחקה.');
-    setTimeout(hideMessages, 3000);
-  } catch (err) {
-    showError('שגיאה במחיקה: ' + (err && err.message ? err.message : err));
-  }
-}
-
-// ===== CSV Export =====
 function exportCSV() {
-  if (allRegistrations.length === 0) {
-    alert('אין נתונים לייצוא');
-    return;
-  }
-  const headers = [
-    'תאריך הרשמה', 'סטטוס',
-    'שם פרטי הורה', 'שם משפחה הורה', 'טלפון', 'אימייל',
-    'סיכום ילדים',
-    'שם ילד 1', 'גיל ילד 1', 'גן ילד 1',
-    'שם ילד 2', 'גיל ילד 2', 'גן ילד 2',
-    'שם ילד 3', 'גיל ילד 3', 'גן ילד 3',
-    'שם ילד 4', 'גיל ילד 4', 'גן ילד 4',
-    'שם ילד 5', 'גיל ילד 5', 'גן ילד 5',
-    'תאריך התחלה', 'תאריך סיום', 'ימי היעדרות',
-    'אלרגיות', 'הערות מההורה', 'הערות פנימיות',
-    'שמעו עלינו מ', 'אישור תנאים'
-  ];
-
-  const rows = allRegistrations.map(r => {
-    const kids = r.children || [];
-    const row = [
-      r.created_at ? new Date(r.created_at).toLocaleString('he-IL') : '',
-      r.status || 'חדש',
-      r.parent_first_name || '', r.parent_last_name || '',
-      r.parent_phone || '', r.parent_email || '',
-      r.children_summary || ''
-    ];
-    for (let i = 0; i < 5; i++) {
-      row.push(kids[i] ? (kids[i].name || '') : '');
-      row.push(kids[i] ? (kids[i].age || '') : '');
-      row.push(kids[i] ? (kids[i].gan || '') : '');
-    }
-    row.push(r.start_date || '', r.end_date || '', r.missing_days || '');
-    row.push(r.allergies || '', r.notes || '', r.admin_notes || '');
-    row.push(r.heard_from || '', r.terms_agreed || '');
-    return row;
+  const entries = Object.entries(currentData);
+  const rows = [['תאריך','שם הורה','טלפון','דוא"ל','כתובת','ילדים','אלרגיות','הערות','סטטוס']];
+  entries.forEach(function(e){
+    const r = e[1];
+    const kids = (r.children||[]).map(function(c){return c.name+' ('+c.grade+')';}).join(' | ');
+    rows.push([r.date||'', r.parentName||'', r.parentPhone||'', r.parentEmail||'', r.parentAddress||'', kids, r.allergies||'', r.notes||'', r.status||'new']);
   });
-
-  let csv = '\uFEFF' + headers.map(csvCell).join(',') + '\n';
-  csv += rows.map(r => r.map(csvCell).join(',')).join('\n');
-
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
-  const url = URL.createObjectURL(blob);
+  const csv = '\uFEFF' + rows.map(function(row){
+    return row.map(function(v){return '"'+String(v).replace(/"/g,'""')+'"';}).join(',');
+  }).join('\n');
   const a = document.createElement('a');
-  a.href = url;
-  a.download = 'הרשמות_קייטנת_שירי_' + new Date().toISOString().slice(0,10) + '.csv';
-  document.body.appendChild(a);
+  a.href = URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
+  a.download = 'רשימת נרשמים.csv';
   a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
 }
-
-function csvCell(v) {
-  const s = String(v == null ? '' : v);
-  return s.includes(',') || s.includes('"') || s.includes('\n')
-    ? '"' + s.replace(/"/g, '""') + '"' : s;
-}
-
-// ===== Helpers =====
-function escape(s) {
-  return String(s == null ? '' : s).replace(/[&<>"']/g, m => ({
-    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
-  }[m]));
-}
-function escapeAttr(s) { return escape(s); }
-
-function showError(msg) {
-  const el = document.getElementById('error-banner');
-  el.textContent = msg;
-  el.classList.remove('hidden');
-}
-function showInfo(msg) {
-  const el = document.getElementById('info-banner');
-  el.innerHTML = msg;
-  el.classList.remove('hidden');
-}
-function hideMessages() {
-  document.getElementById('error-banner').classList.add('hidden');
-  document.getElementById('info-banner').classList.add('hidden');
-}
-
-// ===== Init =====
-checkAuth();
 </script>
+
 </body>
 </html>
