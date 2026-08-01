@@ -461,9 +461,7 @@ function exportCSV() {
     r.dateFrom, r.dateTo, r.days||'',
     r.allergies||'', r.notes||''
   ].map(v=>'"'+String(v||'').replace(/"/g,'""')+'"').join(','));
-  const csv = '﻿' + hdrs.join(',') + '
-' + rows.join('
-');
+  const csv = '\uFEFF' + hdrs.join(',') + '\n' + rows.join('\n');
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
   a.download = 'kaitanat-shiri-2026.csv';
